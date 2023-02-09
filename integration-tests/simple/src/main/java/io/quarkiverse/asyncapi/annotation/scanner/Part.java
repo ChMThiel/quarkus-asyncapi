@@ -3,19 +3,20 @@ package io.quarkiverse.asyncapi.annotation.scanner;
 import java.util.List;
 import java.util.UUID;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.wildfly.common.annotation.NotNull;
 
-//@Schema(description = "Part definition. Part may be a product, a raw material, an equipment or any other part")
+@Schema(description = "Part definition. Part may be a product, a raw material, an equipment or any other part")
 public class Part {
 
-    //   //@Schema(description = "Dimension of the part")
+    @Schema(description = "Dimension of the part")
     @NotNull
     private Class<? extends List<?>> dimension;
 
-    //   //@Schema(description = "reference to partgroup of the part")
+    @Schema(description = "reference to partgroup of the part")
     private UUID partGroupId;
 
-    //@Schema(description = "reference to parttype of the part")
+    @Schema(description = "reference to parttype of the part")
     private UUID partTypeId;
 
     private String externalId;
@@ -23,28 +24,28 @@ public class Part {
     @NotNull
     private AvailabilityState availabilityState = AvailabilityState.AVAILABLE;
 
-    //@Schema(description = "PROCUREMENT TYPE of the part: INHOUSE, EXTERNAL")
+    @Schema(description = "PROCUREMENT TYPE of the part: INHOUSE, EXTERNAL")
     @NotNull
     ProcurementType procurementType = ProcurementType.EXTERNAL;
 
-    //@Schema(description = "Material Type of the part: MATERIAL, PRODUCT")
+    @Schema(description = "Material Type of the part: MATERIAL, PRODUCT")
     @NotNull
     MaterialType materialType = MaterialType.MATERIAL;
 
-    //@Schema(description = "expiration time of the part in seconds")
+    //    @Schema(description = "expiration time of the part in seconds")
     //    private GecDuration expirationTime;
 
     private WorkorderQuantityAdjustmentMode workorderQuantityAdjustmentMode;
 
     private WorkorderFinishMode workorderFinishMode;
 
-    //@Schema(description = "Percentage value that the workorder quantity could be overbooked. In combination with finishMode the workorder quantity could be overbooked up to this value before the workorder state will be set automatically to finished")
+    @Schema(description = "Percentage value that the workorder quantity could be overbooked. In combination with finishMode the workorder quantity could be overbooked up to this value before the workorder state will be set automatically to finished")
     private Integer workorderQuantityOverbookPercentage;
 
     /**
      * Availability-State of Part Components Values: AVAILABLE, DISCHARGED, BLOCKED, DELETED
      */
-    //@Schema(description = "Availability State of the part")
+    @Schema(description = "Availability State of the part")
     public enum AvailabilityState {
         AVAILABLE,
         BLOCKED,
@@ -56,13 +57,13 @@ public class Part {
      * ProcurementType of a part/material, defines id the part is produced Inhouse or is delivered from external
      * Values:INHOUSE, EXTERNAL
      */
-    //@Schema(description = "Procurement Type of a part")
+    @Schema(description = "Procurement Type of a part")
     public enum ProcurementType {
         INHOUSE,
         EXTERNAL;
     }
 
-    //@Schema(description = "Material Type of a part: PRODUCT, MATERIAL, etc. A Product is based on a BOM, Material is not based on a BOM.")
+    @Schema(description = "Material Type of a part: PRODUCT, MATERIAL, etc. A Product is based on a BOM, Material is not based on a BOM.")
     public enum MaterialType {
         PRODUCT(true),
         MATERIAL(true),
@@ -79,21 +80,21 @@ public class Part {
         }
     }
 
-    //@Schema(description = "Modes to set the workorder state automatically to finish")
+    @Schema(description = "Modes to set the workorder state automatically to finish")
     public enum WorkorderFinishMode {
-        //@Schema(description = "No automated finish of a workorder. Workorder has to be closed manually")
+        @Schema(description = "No automated finish of a workorder. Workorder has to be closed manually")
         NONE,
-        //@Schema(description = "Set the Workorder to finish, when the quantityStarted reaches the workorder quantity")
+        @Schema(description = "Set the Workorder to finish, when the quantityStarted reaches the workorder quantity")
         FINISH_ON_QUANTITY_STARTED,
-        //@Schema(description = "Set the Workorder to finish, when the quantityFinished reaches the workorder quantity")
+        @Schema(description = "Set the Workorder to finish, when the quantityFinished reaches the workorder quantity")
         FINISH_ON_QUANTITY_FINISHED,
     }
 
-    //@Schema(description = "QuantityAjustment for the workorder quantity. Defines whether the workorder quantity should be increased in special cases (e.g. increase by Scrap-Booking)")
+    @Schema(description = "QuantityAjustment for the workorder quantity. Defines whether the workorder quantity should be increased in special cases (e.g. increase by Scrap-Booking)")
     public enum WorkorderQuantityAdjustmentMode {
-        //@Schema(description = "No automatic increasing of the workorder quantity")
+        @Schema(description = "No automatic increasing of the workorder quantity")
         NONE,
-        //@Schema(description = "Increasing the workorder quantity for each scrap booking")
+        @Schema(description = "Increasing the workorder quantity for each scrap booking")
         ADJUST_SCRAP
     }
 

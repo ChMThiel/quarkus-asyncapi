@@ -2,6 +2,7 @@ package io.quarkiverse.asyncapi.annotation.scanner;
 
 import javax.enterprise.context.ApplicationScoped;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 
@@ -21,6 +22,7 @@ public class DummyController {
     //    Publisher<TestMessage<TestMessageData>> publisher;
     //no inject, there is no implementation for Publisher in classpath -> Quarkus won't start
     @Channel("transfer-topic")
+    @Schema(description = "transferEmitter description")
     Emitter<TransferMessage<TransferWorkorderMessage>> transferEmitter;
 
 }

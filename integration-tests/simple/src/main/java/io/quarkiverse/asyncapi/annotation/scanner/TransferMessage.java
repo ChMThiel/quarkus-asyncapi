@@ -3,6 +3,9 @@ package io.quarkiverse.asyncapi.annotation.scanner;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+@Schema(description = "TransferMessage description")
 public class TransferMessage<T> extends GecMessage<T> {
 
     private String type;

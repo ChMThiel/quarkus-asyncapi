@@ -23,6 +23,8 @@ import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
@@ -44,6 +46,7 @@ import com.asyncapi.v2.model.schema.Schema;
 
 import io.quarkiverse.asyncapi.config.ObjectMapperFactory;
 import io.quarkus.test.junit.QuarkusTest;
+import java.util.function.Consumer;
 
 @QuarkusTest
 public class AsyncApiAnnotationScannerTest {
@@ -92,8 +95,6 @@ public class AsyncApiAnnotationScannerTest {
     }
 
     AbstractMap.SimpleEntry<String, ChannelItem> getChannelItem(AnnotationInstance aAnnotationInstance, Index aJandex) {
-        ChannelItem.ChannelItemBuilder channelBuilder = ChannelItem.builder()
-                .description("TODO read channel-description by annotation");
         boolean isEmitter;
         Type messageType;
         String operationId;
@@ -105,27 +106,27 @@ public class AsyncApiAnnotationScannerTest {
                 isEmitter = annotationTargetType.name().toString().contains("Emitter");
                 Type genericMessageType = annotationTargetType.asParameterizedType().arguments().get(0);
                 switch (genericMessageType.kind()) {
-                    case CLASS:
+                    case CLASS ->
                         messageType = genericMessageType.asClassType();
-                        break;
-                    case PARAMETERIZED_TYPE:
+                    case PARAMETERIZED_TYPE ->
                         messageType = genericMessageType.asParameterizedType();
-                        break;
-                    default:
+                    default ->
                         throw new IllegalArgumentException("unhandled messageType " + genericMessageType.kind());
                 }
                 break;
+
             //TODO other annotation-targets
             default:
                 operationId = UUID.randomUUID().toString();
                 isEmitter = false;
                 messageType = null;
         }
+        ChannelItem.ChannelItemBuilder channelBuilder = ChannelItem.builder();
         Operation operation = Operation.builder()
-                .description("TODO read operation-description by annotation")
                 .message(getMessage(messageType, aJandex))
                 .operationId(operationId)
                 .build();
+        addSchemaAnnotationData(aAnnotationInstance.target(), operation);
         ChannelItem channelItem = isEmitter
                 ? channelBuilder.publish(operation).build()
                 : channelBuilder.subscribe(operation).build();
@@ -156,8 +157,6 @@ public class AsyncApiAnnotationScannerTest {
     Message getMessage(Type aMessageType, Index aJandex) {
         return Message.builder()
                 .name(aMessageType.name().toString()) //TODO expect to be overriden by annotation
-                .summary("TODO messageSummary by annotation")
-                .description("TODO messageDescription by annotation")
                 .contentType("application/json")
                 .payload(getSchema(aMessageType, aJandex, new HashMap<>()))
                 .build();
@@ -166,24 +165,16 @@ public class AsyncApiAnnotationScannerTest {
     Schema getSchema(Type aType, Index aJandex, Map<String, Type> typeVariableMap) {
         Schema.SchemaBuilder schemaBuilder = Schema.builder();
         switch (aType.kind()) {
-            case PRIMITIVE:
+            case PRIMITIVE ->
                 getPrimitiveSchema(aType, schemaBuilder);
-                break;
-            case ARRAY:
+            case ARRAY ->
                 getArraySchema(aType, typeVariableMap, schemaBuilder, aJandex);
-                break;
-            case CLASS:
-            case PARAMETERIZED_TYPE:
+            case CLASS, PARAMETERIZED_TYPE ->
                 getClassSchema(aType, schemaBuilder, aJandex, typeVariableMap);
-                break;
-            default:
-                //TODO other types
+            default -> //TODO other types
                 schemaBuilder.type(com.asyncapi.v2.model.schema.Type.OBJECT);
-                break;
         }
-        return schemaBuilder
-                .description("TODO read field-description by annotation")
-                .build();
+        return schemaBuilder.build();
     }
 
     void getClassSchema(Type aType, Schema.SchemaBuilder aSchemaBuilder, Index aJandex, Map<String, Type> aTypeVariableMap) {
@@ -199,6 +190,7 @@ public class AsyncApiAnnotationScannerTest {
         } else {
             aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.OBJECT);
             if (classInfo != null) {
+                addSchemaAnnotationData(classInfo, aSchemaBuilder);
                 if (aType.kind().equals(Type.Kind.PARAMETERIZED_TYPE)) {
                     for (int i = 0; i < aType.asParameterizedType().arguments().size(); i++) {
                         aTypeVariableMap.put(classInfo.typeParameters().get(i).identifier(),
@@ -207,13 +199,9 @@ public class AsyncApiAnnotationScannerTest {
                 }
                 //TODO consider getter-annotations, too
                 List<FieldInfo> allFieldsRecursiv = getAllFieldsRecursiv(classInfo, aJandex, aTypeVariableMap);
-                Map<String, Schema> properties = allFieldsRecursiv.stream()
-                        .collect(Collectors.toMap(
-                                FieldInfo::name,
-                                f -> getSchema(aTypeVariableMap.getOrDefault(f.type().toString(), f.type()), aJandex,
-                                        aTypeVariableMap),
-                                (a, b) -> b,
-                                TreeMap::new));
+                Map<String, Schema> properties = allFieldsRecursiv.stream().collect(Collectors.toMap(
+                        FieldInfo::name,
+                        f -> getFieldSchema(f, aJandex, aTypeVariableMap), (a, b) -> b, TreeMap::new));
                 aSchemaBuilder.properties(properties);
             } else {
                 //class is not in jandex...try to get the class by reflection
@@ -231,25 +219,48 @@ public class AsyncApiAnnotationScannerTest {
         }
     }
 
+    Schema getFieldSchema(FieldInfo aFieldInfo, Index aJandex, Map<String, Type> aTypeVariableMap) {
+        Schema schema = getSchema(aTypeVariableMap.getOrDefault(aFieldInfo.type().toString(), aFieldInfo.type()), aJandex,
+                aTypeVariableMap);
+        addSchemaAnnotationData(aFieldInfo, schema);
+        return schema;
+    }
+
+    void addSchemaAnnotationData(AnnotationTarget aAnnotationTarget, Schema aSchema) {
+        addSchemaAnnotationStringData(aAnnotationTarget, "description", aSchema::setDescription);
+    }
+
+    void addSchemaAnnotationData(AnnotationTarget aAnnotationTarget, Schema.SchemaBuilder aSchemaBuilder) {
+        addSchemaAnnotationStringData(aAnnotationTarget, "description", aSchemaBuilder::description);
+    }
+
+    void addSchemaAnnotationData(AnnotationTarget aAnnotationTarget, Operation aOperation) {
+        addSchemaAnnotationStringData(aAnnotationTarget, "description", aOperation::setDescription);
+    }
+    
+    void addSchemaAnnotationStringData(AnnotationTarget aAnnotationTarget, String aAnnotationFieldName, Consumer<String> aSetter) {
+        AnnotationInstance annotation = aAnnotationTarget.declaredAnnotation(
+                DotName.createSimple(org.eclipse.microprofile.openapi.annotations.media.Schema.class));
+        if (annotation != null) {
+            AnnotationValue value = annotation.value(aAnnotationFieldName);
+            if (value != null) {
+                aSetter.accept(value.asString());
+            }
+        }
+        
+    }
+
     void getJavaLangPackageSchema(Type aType, Schema.SchemaBuilder aSchemaBuilder) {
         switch (aType.name().withoutPackagePrefix()) {
-            case "Boolean":
+            case "Boolean" ->
                 aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.BOOLEAN);
-                break;
-            case "Character":
-            case "String":
+            case "Character", "String" ->
                 aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.STRING);
-                break;
-            case "Integer":
-            case "Long":
-            case "Short":
+            case "Integer", "Long", "Short" ->
                 aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.INTEGER);
-                break;
-            case "Double":
-            case "Float":
+            case "Double", "Float" ->
                 aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.NUMBER);
-                break;
-            default:
+            default ->
                 aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.OBJECT);
         }
     }
@@ -263,22 +274,15 @@ public class AsyncApiAnnotationScannerTest {
 
     void getPrimitiveSchema(Type aType, Schema.SchemaBuilder aSchemaBuilder) {
         switch (aType.asPrimitiveType().primitive()) {
-            case BOOLEAN:
+            case BOOLEAN ->
                 aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.BOOLEAN);
-                break;
-            case CHAR:
+            case CHAR ->
                 aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.STRING);
-                break;
-            case INT:
-            case LONG:
-            case SHORT:
+            case INT, LONG, SHORT ->
                 aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.INTEGER);
-                break;
-            case DOUBLE:
-            case FLOAT:
+            case DOUBLE, FLOAT ->
                 aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.NUMBER);
-                break;
-            default:
+            default ->
                 aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.OBJECT);
         }
     }
@@ -306,4 +310,5 @@ public class AsyncApiAnnotationScannerTest {
             return reader.read();
         }
     }
+
 }
