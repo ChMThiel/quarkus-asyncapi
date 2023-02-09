@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -46,7 +47,6 @@ import com.asyncapi.v2.model.schema.Schema;
 
 import io.quarkiverse.asyncapi.config.ObjectMapperFactory;
 import io.quarkus.test.junit.QuarkusTest;
-import java.util.function.Consumer;
 
 @QuarkusTest
 public class AsyncApiAnnotationScannerTest {
@@ -121,7 +121,19 @@ public class AsyncApiAnnotationScannerTest {
                 isEmitter = false;
                 messageType = null;
         }
-        ChannelItem.ChannelItemBuilder channelBuilder = ChannelItem.builder();
+        String channel = aAnnotationInstance.value().asString();
+        String configKey = "mp.messaging." + (isEmitter ? "outgoing" : "incomming") + "." + channel + ".topic";
+        String topic = ConfigProvider.getConfig()
+                .getOptionalValue(configKey, String.class)
+                .orElse(channel);
+        MyKafkaChannelBinding channelBinding = MyKafkaChannelBinding.builder()
+                .topic(topic)
+                .build();
+        ConfigProvider.getConfig()
+                .getOptionalValue("io.quarkiverse.asyncapi.topic." + topic + ".description", String.class)
+                .ifPresent(channelBinding::setDescription);
+        ChannelItem.ChannelItemBuilder channelBuilder = ChannelItem.builder()
+                .bindings(Map.of("kafka", channelBinding));
         Operation operation = Operation.builder()
                 .message(getMessage(messageType, aJandex))
                 .operationId(operationId)
@@ -130,12 +142,10 @@ public class AsyncApiAnnotationScannerTest {
         ChannelItem channelItem = isEmitter
                 ? channelBuilder.publish(operation).build()
                 : channelBuilder.subscribe(operation).build();
-        String configKey = "mp.messaging." + (isEmitter ? "outgoing" : "incomming") + "."
-                + aAnnotationInstance.value().asString() + ".topic";
-        String topic = ConfigProvider.getConfig()
-                .getOptionalValue(configKey, String.class)
-                .orElse(aAnnotationInstance.value().asString());
-        return new AbstractMap.SimpleEntry<>(topic, channelItem);
+        ConfigProvider.getConfig()
+                .getOptionalValue("io.quarkiverse.asyncapi.channel." + channel + ".description", String.class)
+                .ifPresent(channelItem::setDescription);
+        return new AbstractMap.SimpleEntry<>(channel, channelItem);
     }
 
     Components getGlobalComponents() {
@@ -237,17 +247,17 @@ public class AsyncApiAnnotationScannerTest {
     void addSchemaAnnotationData(AnnotationTarget aAnnotationTarget, Operation aOperation) {
         addSchemaAnnotationStringData(aAnnotationTarget, "description", aOperation::setDescription);
     }
-    
-    void addSchemaAnnotationStringData(AnnotationTarget aAnnotationTarget, String aAnnotationFieldName, Consumer<String> aSetter) {
+
+    void addSchemaAnnotationStringData(AnnotationTarget aAnnotationTarget, String aAnnotationFieldName,
+            Consumer<String> aSetter) {
         AnnotationInstance annotation = aAnnotationTarget.declaredAnnotation(
-                DotName.createSimple(org.eclipse.microprofile.openapi.annotations.media.Schema.class));
+                DotName.createSimple("org.eclipse.microprofile.openapi.annotations.media.Schema"));
         if (annotation != null) {
             AnnotationValue value = annotation.value(aAnnotationFieldName);
             if (value != null) {
                 aSetter.accept(value.asString());
             }
         }
-        
     }
 
     void getJavaLangPackageSchema(Type aType, Schema.SchemaBuilder aSchemaBuilder) {

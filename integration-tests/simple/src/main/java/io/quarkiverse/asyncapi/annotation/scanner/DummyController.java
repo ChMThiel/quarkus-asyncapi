@@ -12,17 +12,23 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 @ApplicationScoped
 public class DummyController {
 
-    //    //no inject, there is no implementation for Emitter in classpath -> Quarkus won't start
+    //no inject, there is no implementation for Emitter in classpath -> Quarkus won't start
     //    @Channel("channel-x")
     //    @Broadcast
+    //    @Schema(description = "testMessage Emmiter description")
     //    Emitter<TestMessage<TestMessageData>> emitter;
     //    //no inject, there is no implementation for Publisher in classpath -> Quarkus won't start
     //    @Channel("channel-y")
-    //    //@Schema(implementation = List<String>.class)
+    //    @Schema(description = "testMessage Publisher description")
     //    Publisher<TestMessage<TestMessageData>> publisher;
-    //no inject, there is no implementation for Publisher in classpath -> Quarkus won't start
-    @Channel("transfer-topic")
-    @Schema(description = "transferEmitter description")
-    Emitter<TransferMessage<TransferWorkorderMessage>> transferEmitter;
+    //    //no inject, there is no implementation for Publisher in classpath -> Quarkus won't start
+
+    @Channel("transfer-channel1")
+    @Schema(description = "transferEmitter description1")
+    Emitter<TransferMessage<TransferWorkorderMessage>> transferEmitter1;
+
+    @Channel("transfer-channel2")
+    @Schema(description = "transferEmitter description2")
+    Emitter<TransferMessage<String>> transferEmitter2;
 
 }
