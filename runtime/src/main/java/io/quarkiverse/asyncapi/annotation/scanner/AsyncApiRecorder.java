@@ -19,6 +19,8 @@ import io.quarkus.runtime.annotations.Recorder;
 @ApplicationScoped
 public class AsyncApiRecorder {
 
+    static final String FOLDER = "target/classes/META-INF/resources";
+    public static final Path FILE = Path.of(FOLDER + "/asyncApi.yaml");
     private AsyncAPI asyncAPI;
 
     public void setAsyncAPI(AsyncAPI aAsyncAPI) {
@@ -34,16 +36,14 @@ public class AsyncApiRecorder {
 
     void store(String aJson) {
         try {
-            String folder = "target/classes/META-INF/resources";
-            Path dir = Path.of(folder);
+            Path dir = Path.of(FOLDER);
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
             }
-            Path file = Path.of(folder + "/asyncApi.yaml");
-            if (!Files.exists(file)) {
-                Files.createFile(file);
+            if (!Files.exists(FILE)) {
+                Files.createFile(FILE);
             }
-            Files.writeString(file, aJson, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.writeString(FILE, aJson, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             e.printStackTrace();
         }
