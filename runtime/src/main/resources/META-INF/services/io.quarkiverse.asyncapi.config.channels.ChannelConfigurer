@@ -1,2 +1,0 @@
-io.quarkiverse.asyncapi.config.channels.KafkaChannelConfigurer
-io.quarkiverse.asyncapi.config.channels.HttpChannelConfigurer

@@ -10,7 +10,6 @@ import javax.enterprise.context.ApplicationScoped;
 import com.asyncapi.v2.model.AsyncAPI;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import io.quarkiverse.asyncapi.config.ObjectMapperFactory;
 import io.quarkus.runtime.annotations.Recorder;
 
 /**
@@ -28,18 +27,23 @@ public class ScannedAsyncApi {
             String json = ObjectMapperFactory.yaml().writeValueAsString(asyncAPI);
             store(json);
         } catch (JsonProcessingException e) {
-            System.err.println("io.quarkiverse.asyncapi.generator.AsyncAPIResourceGenerator.scanAsyncAPIs()");
+            System.err.println("io.quarkiverse.asyncapi.annotation.scanner.ScannedAsyncApi.scanAsyncAPIs()");
             e.printStackTrace();
         }
     }
 
     void store(String aJson) {
         try {
-            Path path = Path.of("generatedsources");
-            if (!Files.exists(path)) {
-                Files.createFile(path);
+            String folder = "target/classes/META-INF/resources";
+            Path dir = Path.of(folder);
+            if (!Files.exists(dir)) {
+                Files.createDirectories(dir);
             }
-            Files.writeString(path, aJson, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            Path file = Path.of(folder + "/asyncApi.yaml");
+            if (!Files.exists(file)) {
+                Files.createFile(file);
+            }
+            Files.writeString(file, aJson, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             e.printStackTrace();
         }

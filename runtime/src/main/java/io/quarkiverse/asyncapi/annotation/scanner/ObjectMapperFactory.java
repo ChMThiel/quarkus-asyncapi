@@ -1,4 +1,4 @@
-package io.quarkiverse.asyncapi.config;
+package io.quarkiverse.asyncapi.annotation.scanner;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;

@@ -1,4 +1,4 @@
-package io.quarkiverse.asyncapi.generator.annotation.scanner;
+package io.quarkiverse.asyncapi.annotation.scanner;
 
 import static org.jboss.jandex.Type.Kind.PARAMETERIZED_TYPE;
 import static org.jboss.jandex.Type.Kind.PRIMITIVE;
@@ -38,8 +38,6 @@ import com.asyncapi.v2.model.info.Info;
 import com.asyncapi.v2.model.info.License;
 import com.asyncapi.v2.model.schema.Schema;
 
-import io.quarkiverse.asyncapi.annotation.scanner.MyKafkaChannelBinding;
-
 /**
  * @since 09.02.2023
  * @author christiant
@@ -54,6 +52,7 @@ public class AsyncApiAnnotationScanner {
         index = aIndex;
         Map<String, ChannelItem> channels = aIndex.getAnnotations("org.eclipse.microprofile.reactive.messaging.Channel")
                 .stream()
+                .filter(annotation -> !annotation.value().asString().isEmpty())
                 .map(annotation -> getChannelItem(annotation))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, TreeMap::new));
         return AsyncAPI.builder()
@@ -106,9 +105,7 @@ public class AsyncApiAnnotationScanner {
 
             //TODO other annotation-targets
             default:
-                operationId = UUID.randomUUID().toString();
-                isEmitter = false;
-                messageType = null;
+                throw new IllegalArgumentException("unknwon messageType " + aAnnotationInstance);
         }
         String channel = aAnnotationInstance.value().asString();
         String configKey = "mp.messaging." + (isEmitter ? "outgoing" : "incomming") + "." + channel + ".topic";
