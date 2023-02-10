@@ -12,7 +12,7 @@ import io.quarkus.test.junit.QuarkusTest;
 public class AsyncApiAnnotationScannerTest {
 
     @Inject
-    ScannedAsyncApi scannedAsyncApi;
+    AsyncApiRecorder scannedAsyncApi;
 
     @Test
     void shouldScanEmitterAnnotations() throws Exception {

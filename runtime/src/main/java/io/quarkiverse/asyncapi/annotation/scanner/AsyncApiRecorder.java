@@ -17,7 +17,7 @@ import io.quarkus.runtime.annotations.Recorder;
  */
 @Recorder
 @ApplicationScoped
-public class ScannedAsyncApi {
+public class AsyncApiRecorder {
 
     private AsyncAPI asyncAPI;
 

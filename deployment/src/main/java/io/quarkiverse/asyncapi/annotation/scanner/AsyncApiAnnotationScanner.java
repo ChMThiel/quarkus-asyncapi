@@ -47,35 +47,44 @@ public class AsyncApiAnnotationScanner {
     public static final String CONFIG_PREFIX = "io.quarkiverse.asyncapi.";
 
     IndexView index;
+    AsyncApiRuntimeConfig config;
 
-    public AsyncAPI scan(IndexView aIndex) {
+    public AsyncAPI scan(IndexView aIndex, AsyncApiRuntimeConfig aConfig) {
         index = aIndex;
-        Map<String, ChannelItem> channels = aIndex.getAnnotations("org.eclipse.microprofile.reactive.messaging.Channel")
+        config = aConfig;
+        return AsyncAPI.builder()
+                .asyncapi("2.6.0")
+                .id(getConfigValue("id", "urn:com:kafka:server"))
+                .info(getInfo())
+                .defaultContentType(getConfigValue("defaultContentType", "application/json"))
+                .channels(getChannels())
+                .components(getGlobalComponents())
+                .build();
+    }
+
+    public Info getInfo() {
+        return Info.builder() //TODO implement Annotation to define it (use OpenApi???)
+                .title(config.info().title())
+                .version(getConfigValue("version", "1"))
+                .description(getConfigValue("description", ""))
+                .license(License.builder()
+                        .name(getConfigValue("license.name", "Commercial"))
+                        .url(getConfigValue("license.url", "https://gec.io/"))
+                        .build())
+                .contact(Contact.builder()
+                        .name(getConfigValue("contact.name", "Contact and Support"))
+                        .url(getConfigValue("contact.url", "https://gec.io/kontakt/"))
+                        .email(getConfigValue("contact.email", "support@gec.io"))
+                        .build())
+                .build();
+    }
+
+    public Map<String, ChannelItem> getChannels() {
+        return index.getAnnotations("org.eclipse.microprofile.reactive.messaging.Channel")
                 .stream()
                 .filter(annotation -> !annotation.value().asString().isEmpty())
                 .map(annotation -> getChannelItem(annotation))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, TreeMap::new));
-        return AsyncAPI.builder()
-                .asyncapi("2.6.0")
-                .id(getConfigValue("id", "urn:com:kafka:server"))
-                .info(Info.builder() //TODO implement Annotation to define it (use OpenApi???)
-                        .title(getConfigValue("title", "Title"))
-                        .version(getConfigValue("version", "1"))
-                        .description(getConfigValue("description", ""))
-                        .license(License.builder()
-                                .name(getConfigValue("license.name", "Commercial"))
-                                .url(getConfigValue("license.url", "https://gec.io/"))
-                                .build())
-                        .contact(Contact.builder()
-                                .name(getConfigValue("contact.name", "Contact and Support"))
-                                .url(getConfigValue("contact.url", "https://gec.io/kontakt/"))
-                                .email(getConfigValue("contact.email", "support@gec.io"))
-                                .build())
-                        .build())
-                .defaultContentType(getConfigValue("defaultContentType", "application/json"))
-                .channels(channels)
-                .components(getGlobalComponents())
-                .build();
     }
 
     String getConfigValue(String aPostfix, String aDefault) {
