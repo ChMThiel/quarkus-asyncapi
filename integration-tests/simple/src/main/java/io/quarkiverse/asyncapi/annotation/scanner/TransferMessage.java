@@ -5,7 +5,10 @@ import java.util.UUID;
 
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 @Schema(description = "TransferMessage description")
+@JsonView(TransferRelevant.class)
 public class TransferMessage<T> extends GecMessage<T> {
 
     private String type;

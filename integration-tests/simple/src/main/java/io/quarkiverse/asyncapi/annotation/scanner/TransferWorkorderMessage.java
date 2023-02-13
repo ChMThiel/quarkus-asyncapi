@@ -2,6 +2,9 @@ package io.quarkiverse.asyncapi.annotation.scanner;
 
 import java.time.OffsetDateTime;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
+@JsonView(TransferRelevant.class)
 public class TransferWorkorderMessage extends TransferWorkorderMessageBase {
 
     private OffsetDateTime bookDate;

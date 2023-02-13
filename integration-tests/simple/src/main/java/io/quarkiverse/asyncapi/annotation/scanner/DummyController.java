@@ -27,8 +27,8 @@ public class DummyController {
     @Schema(description = "transferEmitter description1")
     Emitter<TransferMessage<TransferWorkorderMessage>> transferEmitter1;
 
-    @Channel("transfer-channel2")
-    @Schema(description = "transferEmitter description2")
-    Emitter<TransferMessage<String>> transferEmitter2;
+    //    @Channel("transfer-channel2")
+    //    @Schema(description = "transferEmitter description2")
+    //    Emitter<TransferMessage<String>> transferEmitter2;
 
 }

@@ -4,12 +4,15 @@ import java.util.UUID;
 
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 /**
  * Company (Buchkreis) definition a Tenant may have multiple companies, but at
  * least one. A company may have one or more plants.
  *
  */
 @Schema(description = "Company")
+@JsonView(TransferRelevant.class)
 public class Company {
 
     //    @JsonView(TransferRelevant.class)

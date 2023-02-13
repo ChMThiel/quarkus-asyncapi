@@ -6,6 +6,8 @@ import java.util.UUID;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.wildfly.common.annotation.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 @Schema(description = "Part definition. Part may be a product, a raw material, an equipment or any other part")
 public class Part {
 
@@ -14,11 +16,14 @@ public class Part {
     private Class<? extends List<?>> dimension;
 
     @Schema(description = "reference to partgroup of the part")
+    @JsonView(TransferRelevant.class)
     private UUID partGroupId;
 
     @Schema(description = "reference to parttype of the part")
+    @JsonView(TransferRelevant.class)
     private UUID partTypeId;
 
+    @JsonView(TransferRelevant.class)
     private String externalId;
 
     @NotNull
@@ -34,7 +39,6 @@ public class Part {
 
     //    @Schema(description = "expiration time of the part in seconds")
     //    private GecDuration expirationTime;
-
     private WorkorderQuantityAdjustmentMode workorderQuantityAdjustmentMode;
 
     private WorkorderFinishMode workorderFinishMode;
@@ -181,7 +185,6 @@ public class Part {
     }
 
     //</editor-fold>
-
     //<editor-fold defaultstate="collapsed" desc="toString">
     @Override
     public String toString() {

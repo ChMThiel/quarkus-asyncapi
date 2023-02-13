@@ -23,9 +23,12 @@ public class AsyncAPIResourceGenerator {
 
     @Record(RUNTIME_INIT)
     @BuildStep
-    void scanAsyncAPIs(CombinedIndexBuildItem aIndex, AsyncApiRecorder aScannedAsyncApi, AsyncApiRuntimeConfig aConfig) {
+    void scanAsyncAPIs(
+            CombinedIndexBuildItem aIndex,
+            AsyncApiRecorder aScannedAsyncApi,
+            AsyncApiRuntimeConfig aConfig) {
         AsyncAPI asyncAPI = new AsyncApiAnnotationScanner().scan(aIndex.getIndex(), aConfig);
-        aScannedAsyncApi.setAsyncAPI(asyncAPI);
+        aScannedAsyncApi.setAsyncAPI(asyncAPI, aConfig);
     }
 
     //TODO config
@@ -66,6 +69,7 @@ public class AsyncAPIResourceGenerator {
                 .routeFunction(path + ".json", corsFilter)
                 .handler(handler)
                 .build());
+        //TODO
 
         routes.produce(nonApplicationRootPathBuildItem.routeBuilder()
                 .routeFunction(path + ".yaml", corsFilter)
