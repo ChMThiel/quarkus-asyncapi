@@ -8,4 +8,6 @@ public class TestMessageData {
 
     private Long value;
     private String data;
+
+    private TestMessageData innerData;
 }

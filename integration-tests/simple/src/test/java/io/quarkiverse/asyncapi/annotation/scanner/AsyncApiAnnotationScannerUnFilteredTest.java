@@ -25,7 +25,7 @@ public class AsyncApiAnnotationScannerUnFilteredTest {
         assertThat(yaml).isNotNull();
         AsyncAPI asyncAPI = ObjectMapperFactory.yaml().readValue(yaml, AsyncAPI.class);
         //when
-        assertThat(asyncAPI.getChannels()).hasSize(1);
+        assertThat(asyncAPI.getChannels()).hasSize(4);
         Message message = (Message) asyncAPI.getChannels().get("transfer-channel1").getPublish().getMessage();
         Schema payload = (Schema) message.getPayload();
         assertThat(payload.getProperties()).hasSize(10);

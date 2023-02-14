@@ -38,6 +38,9 @@ public class MyAsyncApiFilter implements AAFilter {
     }
 
     void recurse(Class aClass, Schema aSchema) {
+        if (aSchema.getProperties() == null) {
+            return;
+        }
         //get over all fields
         Map<String, Schema> filteredPayload = aSchema.getProperties().entrySet().stream()
                 .filter(e -> isClassTransferRelevant(aClass) || isFieldTransferRelevant(aClass, e.getKey()))

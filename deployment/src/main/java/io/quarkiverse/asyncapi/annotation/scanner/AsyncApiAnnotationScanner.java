@@ -9,8 +9,10 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -190,7 +192,11 @@ public class AsyncApiAnnotationScanner {
             aSchemaBuilder.ref("#/components/schemas/OffsetDateTime");
         } else if (aType.name().equals(DotName.createSimple(UUID.class))) {
             aSchemaBuilder.ref("#/components/schemas/UUID");
+        } else if (VISITED_TYPES.contains(aType)) {
+            System.out.println("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiAnnotationScanner.getClassSchema() "
+                    + "Already visited type " + aType + ". Stopping recursion!");
         } else {
+            VISITED_TYPES.add(aType);
             aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.OBJECT);
             if (classInfo != null) {
                 addSchemaAnnotationData(classInfo, aSchemaBuilder);
@@ -208,6 +214,8 @@ public class AsyncApiAnnotationScanner {
                 aSchemaBuilder.properties(properties);
             } else {
                 //class is not in jandex...try to get the class by reflection
+                System.out.println("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiAnnotationScanner.getClassSchema() "
+                        + "Loading raw type " + aType);
                 Class<?> rawClass = JandexReflection.loadRawType(aType);
                 if (Collection.class.isAssignableFrom(rawClass)) {
                     Type collectionType = aType.kind().equals(Type.Kind.PARAMETERIZED_TYPE)
@@ -221,6 +229,8 @@ public class AsyncApiAnnotationScanner {
             }
         }
     }
+
+    static Set<Type> VISITED_TYPES = new HashSet<>();
 
     Schema getFieldSchema(FieldInfo aFieldInfo, Map<String, Type> aTypeVariableMap) {
         Schema schema = getSchema(aTypeVariableMap.getOrDefault(aFieldInfo.type().toString(), aFieldInfo.type()),
