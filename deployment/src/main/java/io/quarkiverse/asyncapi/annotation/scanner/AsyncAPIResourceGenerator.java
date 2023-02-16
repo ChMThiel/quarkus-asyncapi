@@ -64,13 +64,10 @@ public class AsyncAPIResourceGenerator {
                 .displayOnNotFoundPage("Async API Schema document")
                 .blockingRoute()
                 .build());
-
         routes.produce(nonApplicationRootPathBuildItem.routeBuilder()
                 .routeFunction(path + ".json", corsFilter)
                 .handler(handler)
                 .build());
-        //TODO
-
         routes.produce(nonApplicationRootPathBuildItem.routeBuilder()
                 .routeFunction(path + ".yaml", corsFilter)
                 .handler(handler)
@@ -78,6 +75,10 @@ public class AsyncAPIResourceGenerator {
 
         routes.produce(nonApplicationRootPathBuildItem.routeBuilder()
                 .routeFunction(path + ".yml", corsFilter)
+                .handler(handler)
+                .build());
+        routes.produce(nonApplicationRootPathBuildItem.routeBuilder()
+                .routeFunction(path + ".html", corsFilter)
                 .handler(handler)
                 .build());
     }

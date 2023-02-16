@@ -13,15 +13,21 @@ import io.smallrye.config.WithDefault;
 public interface AsyncApiRuntimeConfig {
 
     /**
-     * full qualified name of the implementing AsyncApiFilter
-     *
+     * @return version of the WebComponent to be used in html-view to be found at [HOST]/asyncapi.html
+     * @see https://www.npmjs.com/package/@asyncapi/react-component
+     */
+    @WithDefault("1.0.0-next.47")
+    String webcomponentversion();
+
+    /**
+     * @return full qualified name of the implementing AsyncApiFilter
      * @see AAFilter
      */
     Optional<String> filter();
 
     //TODO provide configs for all fixed parameters
     /**
-     * Info-section of AysnApi
+     * @return Info-section of AysnApi
      */
     InfoConfig info();
 
@@ -29,7 +35,7 @@ public interface AsyncApiRuntimeConfig {
     interface InfoConfig {
 
         /**
-         * Info-Title
+         * @return Info-Title
          */
         @WithDefault("Title")
         String title();
