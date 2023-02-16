@@ -54,8 +54,9 @@ public class AsyncApiHandler implements Handler<RoutingContext> {
 
     String getHtml(RoutingContext aRoutingContext) {
         String version = ConfigProvider.getConfig()
-                .getConfigValue("quarkus.asyncapi.annotation.scanner.webcomponentversion")
-                .getValue();
+                .getValue("quarkus.asyncapi.annotation.scanner.webcomponentversion", String.class);
+        String rootPath = ConfigProvider.getConfig()
+                .getValue("quarkus.http.root-path", String.class);
         //TODO logo
         return """
                 <!DOCTYPE html>
@@ -70,13 +71,13 @@ public class AsyncApiHandler implements Handler<RoutingContext> {
                   <body>
                     <asyncapi-component
                       cssImportPath="https://unpkg.com/@asyncapi/react-component@%s/styles/default.css"
-                      schemaUrl="http://%s/asyncapi.yaml"
+                      schemaUrl="http://%s%s/asyncapi.yaml"
                     >
                     </asyncapi-component>
                   </body>
                 </html>
                 """
-                .formatted(version, version, version, aRoutingContext.request().host());
+                .formatted(version, version, version, aRoutingContext.request().host(), rootPath);
     }
 
     Format getFormat(RoutingContext event) {

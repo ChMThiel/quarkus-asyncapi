@@ -5,6 +5,8 @@ import static io.quarkus.deployment.annotations.ExecutionTime.RUNTIME_INIT;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import com.asyncapi.v2.model.AsyncAPI;
 
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -31,9 +33,6 @@ public class AsyncAPIResourceGenerator {
         aScannedAsyncApi.setAsyncAPI(asyncAPI, aConfig);
     }
 
-    //TODO config
-    public static final String path = "/asyncapi";
-
     @BuildStep
     @Record(RUNTIME_INIT)
     void handler(LaunchModeBuildItem launch,
@@ -41,10 +40,12 @@ public class AsyncAPIResourceGenerator {
             BuildProducer<RouteBuildItem> routes,
             AsyncApiRecorder recorder,
             NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem,
-            //            OpenApiRuntimeConfig openApiRuntimeConfig,
             ShutdownContextBuildItem shutdownContext,
-            //            SmallRyeOpenApiConfig openApiConfig,
+            AsyncApiRuntimeConfig config,
             List<FilterBuildItem> filterBuildItems) {
+
+        String path = ConfigProvider.getConfig()
+                .getValue("quarkus.http.root-path", String.class).concat("/asyncapi");
         AsyncApiHandler handler = new AsyncApiHandler();
         Consumer<Route> corsFilter = null;
         //        // Add CORS filter if the path is not attached to main root
