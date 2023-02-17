@@ -1,3 +1,9 @@
+Scan for Micrprofile Channels and provide the findings as AsyncApi:<br>
+Acces scan-result under
+* http://localhost:8080/test-svc/asyncapi.html
+* http://localhost:8080/test-svc/asyncapi.yaml
+* http://localhost:8080/test-svc/asyncapi.json
+
 # Quarkus Async API extension
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
