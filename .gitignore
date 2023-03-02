@@ -62,3 +62,14 @@ pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
 release.properties
+
+docs/modules/ROOT/pages/includes/config-group-io-quarkiverse-asyncapi-annotation-scanner-async-api-runtime-config-contact.adoc
+docs/modules/ROOT/pages/includes/config-group-io-quarkiverse-asyncapi-annotation-scanner-async-api-runtime-config-info.adoc
+docs/modules/ROOT/pages/includes/config-group-io-quarkiverse-asyncapi-annotation-scanner-async-api-runtime-config-license.adoc
+docs/modules/ROOT/pages/includes/config-group-io-quarkiverse-asyncapi-annotation-scanner-info.adoc
+docs/modules/ROOT/pages/includes/quarkus-asyncapi-annotation-scanner-async-api-runtime-general-config-items.adoc
+docs/modules/ROOT/pages/includes/quarkus-asyncapi-annotation-scanner-async-api-runtime-io-quarkiverse-asyncapi-annotation-scanner-async-api-runtime-config.adoc
+docs/modules/ROOT/pages/includes/quarkus-asyncapi-annotation-scanner-async-api-runtime.adoc
+docs/modules/ROOT/pages/includes/quarkus-asyncapi-annotation-scanner-general-config-items.adoc
+docs/modules/ROOT/pages/includes/quarkus-asyncapi-annotation-scanner-io-quarkiverse-asyncapi-annotation-scanner-async-api-runtime-config.adoc
+docs/modules/ROOT/pages/includes/quarkus-asyncapi-annotation-scanner.adoc

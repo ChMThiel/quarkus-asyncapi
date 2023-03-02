@@ -55,30 +55,36 @@ public class AsyncApiAnnotationScanner {
         index = aIndex;
         config = aConfig;
         return AsyncAPI.builder()
-                .asyncapi("2.6.0")
-                .id(getConfigValue("id", "urn:com:kafka:server"))
+                .asyncapi(config.version())
+                //                id: 'https://github.com/smartylighting/streetlights-server'
+                .id(getConfiguredKafkaBootstrapServer())
                 .info(getInfo())
-                .defaultContentType(getConfigValue("defaultContentType", "application/json"))
+                //                .servers(config.servers())
+                .defaultContentType(config.defaultContentType())
                 .channels(getChannels())
                 .components(getGlobalComponents())
                 .build();
     }
 
     public Info getInfo() {
-        return Info.builder() //TODO implement Annotation to define it (use OpenApi???)
+        Info.InfoBuilder infoBuilder = Info.builder() //TODO implement Annotation to define it (use OpenApi???)
                 .title(config.info().title())
-                .version(getConfigValue("version", "1"))
-                .description(getConfigValue("description", ""))
-                .license(License.builder()
-                        .name(getConfigValue("license.name", "Commercial"))
-                        .url(getConfigValue("license.url", "https://gec.io/"))
-                        .build())
-                .contact(Contact.builder()
-                        .name(getConfigValue("contact.name", "Contact and Support"))
-                        .url(getConfigValue("contact.url", "https://gec.io/kontakt/"))
-                        .email(getConfigValue("contact.email", "support@gec.io"))
-                        .build())
-                .build();
+                .version(config.info().version());
+        config.info().description().ifPresent(infoBuilder::description);
+        config.info().license().ifPresent(license -> {
+            License.LicenseBuilder licenseBuilder = License.builder()
+                    .name(license.name());
+            license.url().ifPresent(licenseBuilder::url);
+            infoBuilder.license(licenseBuilder.build());
+        });
+        config.info().contact().ifPresent(contact -> {
+            Contact.ContactBuilder contactBuilder = Contact.builder();
+            contact.name().ifPresent(contactBuilder::name);
+            contact.url().ifPresent(contactBuilder::url);
+            contact.email().ifPresent(contactBuilder::email);
+            infoBuilder.contact(contactBuilder.build());
+        });
+        return infoBuilder.build();
     }
 
     public Map<String, ChannelItem> getChannels() {
@@ -91,6 +97,12 @@ public class AsyncApiAnnotationScanner {
 
     String getConfigValue(String aPostfix, String aDefault) {
         return ConfigProvider.getConfig().getOptionalValue(CONFIG_PREFIX + aPostfix, String.class).orElse(aDefault);
+    }
+
+    String getConfiguredKafkaBootstrapServer() {
+        return ConfigProvider.getConfig()
+                .getOptionalValue("kafka.bootstrap.servers", String.class)
+                .orElse("urn:com:kafka:server");
     }
 
     AbstractMap.SimpleEntry<String, ChannelItem> getChannelItem(AnnotationInstance aAnnotationInstance) {

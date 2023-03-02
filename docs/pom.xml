@@ -65,7 +65,8 @@
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/../target/asciidoc/generated/config/</directory>
-                                    <include>quarkus-asyncapi.adoc</include>
+                                    <!--<include>quarkus-asyncapi-annotation-scanner.adoc</include>-->
+                                    <include>*.adoc</include>
                                     <filtering>false</filtering>
                                 </resource>
                                 <resource>

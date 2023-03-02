@@ -13,31 +13,79 @@ import io.smallrye.config.WithDefault;
 public interface AsyncApiRuntimeConfig {
 
     /**
-     * @return version of the WebComponent to be used in html-view to be found at [HOST]/asyncapi.html
+     * Version of the WebComponent to be used in html-view to be found at [HOST]/asyncapi.html
+     *
      * @see https://www.npmjs.com/package/@asyncapi/react-component
      */
     @WithDefault("1.0.0-next.47")
     String webcomponentversion();
 
     /**
-     * @return full qualified name of the implementing AsyncApiFilter
+     * Full qualified name of the implementing AsyncApiFilter
+     *
      * @see AAFilter
      */
     Optional<String> filter();
 
-    //TODO provide configs for all fixed parameters
     /**
-     * @return Info-section of AysnApi
+     * AsyncApi specification version
      */
-    InfoConfig info();
+    @WithDefault("2.6.0")
+    String version();
 
+    /**
+     * Default ContentType
+     */
+    @WithDefault("application/json")
+    String defaultContentType();
+
+    //    Map<String, Server> servers();
+    /**
+     * Info-section of AysncApi
+     */
+    //    @ConfigDocSection
+    Info info();
+
+    /**
+     * Contact section
+     */
     @ConfigGroup
-    interface InfoConfig {
+    interface Contact {
 
         /**
-         * @return Info-Title
+         * Contact-Name
          */
-        @WithDefault("Title")
-        String title();
+        Optional<String> name();
+
+        /**
+         * Contact-Email
+         *
+         * @asciidoclet
+         */
+        @WithDefault("you@mail.org")
+        Optional<String> email();
+
+        /**
+         * Contact-URL
+         */
+        Optional<String> url();
+    }
+
+    /**
+     * License section
+     */
+    @ConfigGroup
+    interface License {
+
+        /**
+         * License-Name
+         */
+        @WithDefault("Commercial")
+        String name();
+
+        /**
+         * License-URL
+         */
+        Optional<String> url();
     }
 }
