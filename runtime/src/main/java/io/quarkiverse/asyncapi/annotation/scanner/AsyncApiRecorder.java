@@ -18,6 +18,7 @@ import com.asyncapi.v2.model.AsyncAPI;
 import com.asyncapi.v2.model.channel.ChannelItem;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import io.quarkiverse.asyncapi.annotation.scanner.config.AsyncApiRuntimeConfig;
 import io.quarkus.runtime.annotations.Recorder;
 
 /**
@@ -70,7 +71,7 @@ public class AsyncApiRecorder {
     }
 
     AAFilter getFilter(AsyncApiRuntimeConfig aConfig) {
-        Optional<String> filterClassName = aConfig.filter();
+        Optional<String> filterClassName = aConfig.filter;
         if (filterClassName.isPresent()) {
             try {
                 ClassLoader loader = Thread.currentThread().getContextClassLoader();

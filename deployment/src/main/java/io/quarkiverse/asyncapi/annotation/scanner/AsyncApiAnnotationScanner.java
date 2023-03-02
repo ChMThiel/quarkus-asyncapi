@@ -40,6 +40,8 @@ import com.asyncapi.v2.model.info.Info;
 import com.asyncapi.v2.model.info.License;
 import com.asyncapi.v2.model.schema.Schema;
 
+import io.quarkiverse.asyncapi.annotation.scanner.config.AsyncApiRuntimeConfig;
+
 /**
  * @since 09.02.2023
  * @author christiant
@@ -55,12 +57,12 @@ public class AsyncApiAnnotationScanner {
         index = aIndex;
         config = aConfig;
         return AsyncAPI.builder()
-                .asyncapi(config.version())
+                .asyncapi(config.version)
                 //                id: 'https://github.com/smartylighting/streetlights-server'
                 .id(getConfiguredKafkaBootstrapServer())
                 .info(getInfo())
                 //                .servers(config.servers())
-                .defaultContentType(config.defaultContentType())
+                .defaultContentType(config.defaultContentType)
                 .channels(getChannels())
                 .components(getGlobalComponents())
                 .build();
@@ -68,22 +70,22 @@ public class AsyncApiAnnotationScanner {
 
     public Info getInfo() {
         Info.InfoBuilder infoBuilder = Info.builder() //TODO implement Annotation to define it (use OpenApi???)
-                .title(config.info().title())
-                .version(config.info().version());
-        config.info().description().ifPresent(infoBuilder::description);
-        config.info().license().ifPresent(license -> {
-            License.LicenseBuilder licenseBuilder = License.builder()
-                    .name(license.name());
-            license.url().ifPresent(licenseBuilder::url);
+                .version(config.infoVersion);
+        config.infoTitle.ifPresent(infoBuilder::title);
+        config.infoDescription.ifPresent(infoBuilder::description);
+        License.LicenseBuilder licenseBuilder = License.builder();
+        if (config.infoLicensName.isPresent() || config.infoLicenseUrl.isPresent()) {
+            config.infoLicensName.ifPresent(licenseBuilder::name);
+            config.infoLicenseUrl.ifPresent(licenseBuilder::url);
             infoBuilder.license(licenseBuilder.build());
-        });
-        config.info().contact().ifPresent(contact -> {
+        }
+        if (config.infoContactEmail.isPresent() || config.infoContactEmail.isPresent() || config.infoContactUrl.isPresent()) {
             Contact.ContactBuilder contactBuilder = Contact.builder();
-            contact.name().ifPresent(contactBuilder::name);
-            contact.url().ifPresent(contactBuilder::url);
-            contact.email().ifPresent(contactBuilder::email);
+            config.infoContactName.ifPresent(contactBuilder::name);
+            config.infoContactEmail.ifPresent(contactBuilder::email);
+            config.infoContactUrl.ifPresent(contactBuilder::url);
             infoBuilder.contact(contactBuilder.build());
-        });
+        }
         return infoBuilder.build();
     }
 
@@ -93,10 +95,12 @@ public class AsyncApiAnnotationScanner {
                 .filter(annotation -> !annotation.value().asString().isEmpty())
                 .map(annotation -> getChannelItem(annotation))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, TreeMap::new));
+
     }
 
     String getConfigValue(String aPostfix, String aDefault) {
         return ConfigProvider.getConfig().getOptionalValue(CONFIG_PREFIX + aPostfix, String.class).orElse(aDefault);
+
     }
 
     String getConfiguredKafkaBootstrapServer() {
@@ -136,7 +140,8 @@ public class AsyncApiAnnotationScanner {
                 .getOptionalValue(configKey, String.class)
                 .orElse(channel);
         MyKafkaChannelBinding channelBinding = new MyKafkaChannelBinding(topic);
-        ConfigProvider.getConfig()
+        ConfigProvider
+                .getConfig()
                 .getOptionalValue(CONFIG_PREFIX + ".topic." + topic + ".description", String.class)
                 .ifPresent(channelBinding::setDescription);
         ChannelItem.ChannelItemBuilder channelBuilder = ChannelItem.builder()
@@ -149,7 +154,8 @@ public class AsyncApiAnnotationScanner {
         ChannelItem channelItem = isEmitter
                 ? channelBuilder.publish(operation).build()
                 : channelBuilder.subscribe(operation).build();
-        ConfigProvider.getConfig()
+        ConfigProvider
+                .getConfig()
                 .getOptionalValue(CONFIG_PREFIX + ".channel." + channel + ".description", String.class)
                 .ifPresent(channelItem::setDescription);
         return new AbstractMap.SimpleEntry<>(channel, channelItem);
@@ -198,12 +204,16 @@ public class AsyncApiAnnotationScanner {
         ClassInfo classInfo = index.getClassByName(aType.name());
         if (aType.name().packagePrefix().startsWith("java.lang")) {
             getJavaLangPackageSchema(aType, aSchemaBuilder);
+
         } else if (classInfo != null && classInfo.isEnum()) {
             aSchemaBuilder.enumValue(classInfo.enumConstants().stream().map(FieldInfo::name).map(Object.class::cast).toList());
+
         } else if (aType.name().equals(DotName.createSimple(OffsetDateTime.class))) {
-            aSchemaBuilder.ref("#/components/schemas/OffsetDateTime");
+            aSchemaBuilder.ref(
+                    "#/components/schemas/OffsetDateTime");
         } else if (aType.name().equals(DotName.createSimple(UUID.class))) {
-            aSchemaBuilder.ref("#/components/schemas/UUID");
+            aSchemaBuilder.ref(
+                    "#/components/schemas/UUID");
         } else if (VISITED_TYPES.contains(aType)) {
             System.out.println("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiAnnotationScanner.getClassSchema() "
                     + "Already visited type " + aType + ". Stopping recursion!");
@@ -229,11 +239,14 @@ public class AsyncApiAnnotationScanner {
                 System.out.println("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiAnnotationScanner.getClassSchema() "
                         + "Loading raw type " + aType);
                 Class<?> rawClass = JandexReflection.loadRawType(aType);
-                if (Collection.class.isAssignableFrom(rawClass)) {
+
+                if (Collection.class
+                        .isAssignableFrom(rawClass)) {
                     Type collectionType = aType.kind().equals(Type.Kind.PARAMETERIZED_TYPE)
                             ? aTypeVariableMap.getOrDefault(aType.asParameterizedType().arguments().get(0).toString(),
                                     aType.asParameterizedType().arguments().get(0))
                             : aType;
+
                     aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.ARRAY)
                             .items(getSchema(collectionType, aTypeVariableMap));
                 }

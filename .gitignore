@@ -73,3 +73,4 @@ docs/modules/ROOT/pages/includes/quarkus-asyncapi-annotation-scanner-async-api-r
 docs/modules/ROOT/pages/includes/quarkus-asyncapi-annotation-scanner-general-config-items.adoc
 docs/modules/ROOT/pages/includes/quarkus-asyncapi-annotation-scanner-io-quarkiverse-asyncapi-annotation-scanner-async-api-runtime-config.adoc
 docs/modules/ROOT/pages/includes/quarkus-asyncapi-annotation-scanner.adoc
+docs/modules/ROOT/pages/includes/quarkus-asyncapi-annotation-scanner-io-quarkiverse-asyncapi-annotation-scanner-config-async-api-runtime-config.adoc
