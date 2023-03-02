@@ -30,7 +30,7 @@ public class AsyncAPIResourceGenerator {
             CombinedIndexBuildItem aIndex,
             AsyncApiRecorder aScannedAsyncApi,
             AsyncApiRuntimeConfig aConfig) {
-        AsyncAPI asyncAPI = new AsyncApiAnnotationScanner().scan(aIndex.getIndex(), aConfig);
+        AsyncAPI asyncAPI = new AsyncApiBuilder(aIndex.getIndex(), aConfig).build();
         aScannedAsyncApi.setAsyncAPI(asyncAPI, aConfig);
     }
 

@@ -29,29 +29,29 @@ import io.quarkus.runtime.annotations.Recorder;
 public class AsyncApiRecorder {
 
     static final String FOLDER = "target/classes/META-INF/resources";
-    public static final Path FILE = Path.of(FOLDER + "/asyncApi.yaml");
     private static final Logger LOGGER = Logger.getLogger(AsyncApiRecorder.class.getName());
 
     public void setAsyncAPI(AsyncAPI aAsyncAPI, AsyncApiRuntimeConfig aConfig) {
         try {
             AsyncAPI filteredAPI = filter(aAsyncAPI, aConfig);
-            String yaml = ObjectMapperFactory.yaml().writeValueAsString(filteredAPI);
-            store(yaml);
+            store(ObjectMapperFactory.yaml().writeValueAsString(filteredAPI), "yaml");
+            store(ObjectMapperFactory.json().writeValueAsString(filteredAPI), "json");
         } catch (JsonProcessingException e) {
             LOGGER.throwing("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiRecorder", "scanAsyncAPIs", e);
         }
     }
 
-    void store(String aJson) {
+    void store(String aContent, String aFileSuffix) {
         try {
             Path dir = Path.of(FOLDER);
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
             }
-            if (!Files.exists(FILE)) {
-                Files.createFile(FILE);
+            Path file = Path.of(FOLDER + "/asyncApi." + aFileSuffix);
+            if (!Files.exists(file)) {
+                Files.createFile(file);
             }
-            Files.writeString(FILE, aJson, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.writeString(file, aContent, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             LOGGER.throwing("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiRecorder", "store", e);
         }

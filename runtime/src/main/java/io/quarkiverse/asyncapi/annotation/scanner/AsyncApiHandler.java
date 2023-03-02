@@ -1,14 +1,14 @@
 package io.quarkiverse.asyncapi.annotation.scanner;
 
+import static io.quarkiverse.asyncapi.annotation.scanner.AsyncApiRecorder.FOLDER;
+
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.config.ConfigProvider;
-
-import com.asyncapi.v2.model.AsyncAPI;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
@@ -30,12 +30,11 @@ public class AsyncApiHandler implements Handler<RoutingContext> {
         Format format = getFormat(aRoutingContext);
         resp.headers().set("Content-Type", format.getMimeType() + ";charset=UTF-8");
         try {
-            String yaml = Files.readAllLines(AsyncApiRecorder.FILE).stream().collect(Collectors.joining("\n"));
             String output = switch (format) {
                 case YAML ->
-                    yaml;
+                    read("yaml");
                 case JSON ->
-                    convertYamlToJson(yaml, aRoutingContext);
+                    read("json");
                 case HTML ->
                     getHtml(aRoutingContext);
                 default ->
@@ -43,13 +42,12 @@ public class AsyncApiHandler implements Handler<RoutingContext> {
             };
             resp.end(Buffer.buffer(output)); // see http://localhost:8080/asyncapi
         } catch (IOException iOException) {
-            resp.end(Buffer.buffer("Unable to read file " + AsyncApiRecorder.FILE));
+            resp.end(Buffer.buffer("Unable to read file"));
         }
     }
 
-    String convertYamlToJson(String aYaml, RoutingContext aRoutingContex) throws JsonProcessingException {
-        AsyncAPI asyncAPI = ObjectMapperFactory.yaml().readValue(aYaml, AsyncAPI.class);
-        return ObjectMapperFactory.json().writeValueAsString(asyncAPI);
+    String read(String aType) throws IOException {
+        return Files.readAllLines(Path.of(FOLDER + "/asyncApi." + aType)).stream().collect(Collectors.joining("\n"));
     }
 
     String getHtml(RoutingContext aRoutingContext) {

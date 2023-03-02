@@ -14,7 +14,8 @@ public class ObjectMapperFactory {
     }
 
     private static ObjectMapper setupMapper(ObjectMapper mapper) {
-        return mapper.findAndRegisterModules().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        return mapper.findAndRegisterModules()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .setSerializationInclusion(Include.NON_EMPTY);
     }
 

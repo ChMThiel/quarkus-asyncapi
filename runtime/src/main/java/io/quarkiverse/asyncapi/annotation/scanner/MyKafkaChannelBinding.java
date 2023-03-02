@@ -10,7 +10,6 @@ import com.asyncapi.v2.binding.kafka.KafkaChannelBinding;
 public class MyKafkaChannelBinding extends KafkaChannelBinding {
 
     private String topic;
-    private String description;
 
     public MyKafkaChannelBinding() {
         //default constructor for serialization
@@ -27,13 +26,4 @@ public class MyKafkaChannelBinding extends KafkaChannelBinding {
     public void setTopic(String aTopic) {
         this.topic = aTopic;
     }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String aDescription) {
-        this.description = aDescription;
-    }
-
 }

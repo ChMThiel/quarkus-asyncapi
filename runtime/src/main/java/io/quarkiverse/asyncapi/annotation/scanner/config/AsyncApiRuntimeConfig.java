@@ -1,13 +1,14 @@
 package io.quarkiverse.asyncapi.annotation.scanner.config;
 
+import java.util.Map;
 import java.util.Optional;
 
 import io.quarkiverse.asyncapi.annotation.scanner.AAFilter;
+import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigItem;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
 
-//@ConfigMapping(prefix = "quarkus.asyncapi.annotation.scanner")
 @ConfigRoot(name = "asyncapi.annotation.scanner", phase = ConfigPhase.BUILD_AND_RUN_TIME_FIXED)
 public class AsyncApiRuntimeConfig {
 
@@ -39,7 +40,20 @@ public class AsyncApiRuntimeConfig {
     @ConfigItem(defaultValue = "application/json")
     public String defaultContentType;
 
-    //    Map<String, Server> servers();
+    /**
+     * see https://www.asyncapi.com/docs/reference/specification/v2.6.0#serversObject
+     */
+    @ConfigDocMapKey("server")
+    @ConfigItem(name = "server")
+    public Map<String, Server> servers;
+
+    /**
+     * see https://www.asyncapi.com/docs/reference/specification/v2.6.0#channelItemObject
+     */
+    @ConfigDocMapKey("channel")
+    @ConfigItem(name = "channel")
+    public Map<String, Channel> channels;
+
     /**
      * Title
      */
@@ -71,12 +85,6 @@ public class AsyncApiRuntimeConfig {
      */
     @ConfigItem(name = "info.contact.url")
     public Optional<String> infoContactUrl = Optional.empty();
-    /**
-     * License infos
-     *
-     * @return License
-     */
-    //        @ConfigDocSection
     /**
      * License-Name
      */

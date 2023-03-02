@@ -19,7 +19,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
@@ -30,17 +29,13 @@ import org.jboss.jandex.IndexView;
 import org.jboss.jandex.JandexReflection;
 import org.jboss.jandex.Type;
 
-import com.asyncapi.v2.model.AsyncAPI;
 import com.asyncapi.v2.model.channel.ChannelItem;
 import com.asyncapi.v2.model.channel.message.Message;
 import com.asyncapi.v2.model.channel.operation.Operation;
 import com.asyncapi.v2.model.component.Components;
-import com.asyncapi.v2.model.info.Contact;
-import com.asyncapi.v2.model.info.Info;
-import com.asyncapi.v2.model.info.License;
 import com.asyncapi.v2.model.schema.Schema;
 
-import io.quarkiverse.asyncapi.annotation.scanner.config.AsyncApiRuntimeConfig;
+import io.quarkiverse.asyncapi.annotation.scanner.config.Channel;
 
 /**
  * @since 09.02.2023
@@ -48,65 +43,22 @@ import io.quarkiverse.asyncapi.annotation.scanner.config.AsyncApiRuntimeConfig;
  */
 public class AsyncApiAnnotationScanner {
 
-    public static final String CONFIG_PREFIX = "io.quarkiverse.asyncapi.";
+    public static final String CONFIG_PREFIX = "io.quarkiverse.asyncapi";
 
-    IndexView index;
-    AsyncApiRuntimeConfig config;
+    final IndexView index;
+    final ConfigResolver configResolver;
 
-    public AsyncAPI scan(IndexView aIndex, AsyncApiRuntimeConfig aConfig) {
+    public AsyncApiAnnotationScanner(IndexView aIndex, ConfigResolver aConfigResolver) {
         index = aIndex;
-        config = aConfig;
-        return AsyncAPI.builder()
-                .asyncapi(config.version)
-                //                id: 'https://github.com/smartylighting/streetlights-server'
-                .id(getConfiguredKafkaBootstrapServer())
-                .info(getInfo())
-                //                .servers(config.servers())
-                .defaultContentType(config.defaultContentType)
-                .channels(getChannels())
-                .components(getGlobalComponents())
-                .build();
-    }
-
-    public Info getInfo() {
-        Info.InfoBuilder infoBuilder = Info.builder() //TODO implement Annotation to define it (use OpenApi???)
-                .version(config.infoVersion);
-        config.infoTitle.ifPresent(infoBuilder::title);
-        config.infoDescription.ifPresent(infoBuilder::description);
-        License.LicenseBuilder licenseBuilder = License.builder();
-        if (config.infoLicensName.isPresent() || config.infoLicenseUrl.isPresent()) {
-            config.infoLicensName.ifPresent(licenseBuilder::name);
-            config.infoLicenseUrl.ifPresent(licenseBuilder::url);
-            infoBuilder.license(licenseBuilder.build());
-        }
-        if (config.infoContactEmail.isPresent() || config.infoContactEmail.isPresent() || config.infoContactUrl.isPresent()) {
-            Contact.ContactBuilder contactBuilder = Contact.builder();
-            config.infoContactName.ifPresent(contactBuilder::name);
-            config.infoContactEmail.ifPresent(contactBuilder::email);
-            config.infoContactUrl.ifPresent(contactBuilder::url);
-            infoBuilder.contact(contactBuilder.build());
-        }
-        return infoBuilder.build();
+        configResolver = aConfigResolver;
     }
 
     public Map<String, ChannelItem> getChannels() {
         return index.getAnnotations("org.eclipse.microprofile.reactive.messaging.Channel")
                 .stream()
                 .filter(annotation -> !annotation.value().asString().isEmpty())
-                .map(annotation -> getChannelItem(annotation))
+                .map(this::getChannelItem)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, TreeMap::new));
-
-    }
-
-    String getConfigValue(String aPostfix, String aDefault) {
-        return ConfigProvider.getConfig().getOptionalValue(CONFIG_PREFIX + aPostfix, String.class).orElse(aDefault);
-
-    }
-
-    String getConfiguredKafkaBootstrapServer() {
-        return ConfigProvider.getConfig()
-                .getOptionalValue("kafka.bootstrap.servers", String.class)
-                .orElse("urn:com:kafka:server");
     }
 
     AbstractMap.SimpleEntry<String, ChannelItem> getChannelItem(AnnotationInstance aAnnotationInstance) {
@@ -134,16 +86,9 @@ public class AsyncApiAnnotationScanner {
             default:
                 throw new IllegalArgumentException("unknwon messageType " + aAnnotationInstance);
         }
-        String channel = aAnnotationInstance.value().asString();
-        String configKey = "mp.messaging." + (isEmitter ? "outgoing" : "incomming") + "." + channel + ".topic";
-        String topic = ConfigProvider.getConfig()
-                .getOptionalValue(configKey, String.class)
-                .orElse(channel);
+        String channelName = aAnnotationInstance.value().asString();
+        String topic = configResolver.getTopic(isEmitter, channelName);
         MyKafkaChannelBinding channelBinding = new MyKafkaChannelBinding(topic);
-        ConfigProvider
-                .getConfig()
-                .getOptionalValue(CONFIG_PREFIX + ".topic." + topic + ".description", String.class)
-                .ifPresent(channelBinding::setDescription);
         ChannelItem.ChannelItemBuilder channelBuilder = ChannelItem.builder()
                 .bindings(Map.of("kafka", channelBinding));
         Operation operation = Operation.builder()
@@ -154,14 +99,14 @@ public class AsyncApiAnnotationScanner {
         ChannelItem channelItem = isEmitter
                 ? channelBuilder.publish(operation).build()
                 : channelBuilder.subscribe(operation).build();
-        ConfigProvider
-                .getConfig()
-                .getOptionalValue(CONFIG_PREFIX + ".channel." + channel + ".description", String.class)
-                .ifPresent(channelItem::setDescription);
-        return new AbstractMap.SimpleEntry<>(channel, channelItem);
+        Channel channel = configResolver.getChannel(channelName);
+        if (channel != null) {
+            channel.description.ifPresent(channelItem::setDescription);
+        }
+        return new AbstractMap.SimpleEntry<>(channelName, channelItem);
     }
 
-    Components getGlobalComponents() {
+    public Components getGlobalComponents() {
         return Components.builder()
                 .schemas(Map.of(
                         "OffsetDateTime", Schema.builder()
