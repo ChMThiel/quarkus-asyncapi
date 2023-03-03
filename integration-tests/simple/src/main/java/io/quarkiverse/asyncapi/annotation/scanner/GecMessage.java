@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 /**
  * Container for KafkaMessages with additional Infos
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonView;
  * @author kai
  * @param <T>
  */
+@Schema(description = "GecMessage description")
 @JsonView(TransferRelevant.class)
 public class GecMessage<T> implements Serializable {
 
