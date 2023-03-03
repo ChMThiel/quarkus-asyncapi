@@ -1,5 +1,7 @@
 package io.quarkiverse.asyncapi.annotation.scanner;
 
+import java.util.List;
+
 import javax.enterprise.context.ApplicationScoped;
 
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -38,7 +40,7 @@ public class DummyController {
     Emitter<TransferMessage<String>> transferEmitter2;
 
     @Incoming("incoming-channel-string")
-    @Implementation({ GecMessage.class, Part.class })
+//    @Implementation({ GecMessage.class, Part.class })
     public void receiveMessage(String aData) {
         //Do nothing
     }
@@ -49,7 +51,7 @@ public class DummyController {
     }
 
     @Outgoing("outgoing-channel-string")
-    @Implementation({ GecMessage.class, Part.class })
+    @Implementation({ GecMessage.class, List.class, Part.class }) //GecMessage<List<Part>>
     public String sendMessage() {
         //Do nothing
         return null;
