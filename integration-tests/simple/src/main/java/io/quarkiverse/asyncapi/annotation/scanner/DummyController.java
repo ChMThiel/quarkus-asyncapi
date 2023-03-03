@@ -61,7 +61,7 @@ public class DummyController {
         return null;
     }
 
-    //ignore internal channels that have no application.properties
+    //Ignore internal channels that have no application.properties
     @Channel("prices-intern")
     Multi<Double> pricesIntern;
 

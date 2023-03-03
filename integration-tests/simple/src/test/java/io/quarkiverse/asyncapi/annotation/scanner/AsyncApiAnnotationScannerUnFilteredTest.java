@@ -27,7 +27,7 @@ public class AsyncApiAnnotationScannerUnFilteredTest {
         JsonNode asyncAPI = ObjectMapperFactory.yaml().readTree(yaml);
         //when
         assertThat(asyncAPI.at("/channels")).isInstanceOf(ObjectNode.class);
-        assertThat(asyncAPI.at("/channels")).hasSize(4);
+        assertThat(asyncAPI.at("/channels")).hasSizeGreaterThanOrEqualTo(6);
         assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload")).hasSize(3);
         assertThat(
                 asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties"))

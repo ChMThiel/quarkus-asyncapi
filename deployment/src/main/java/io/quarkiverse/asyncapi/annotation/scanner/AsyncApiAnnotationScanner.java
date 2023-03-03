@@ -1,5 +1,6 @@
 package io.quarkiverse.asyncapi.annotation.scanner;
 
+import static org.jboss.jandex.Type.Kind.CLASS;
 import static org.jboss.jandex.Type.Kind.PARAMETERIZED_TYPE;
 import static org.jboss.jandex.Type.Kind.PRIMITIVE;
 
@@ -19,6 +20,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
@@ -28,6 +30,7 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.JandexReflection;
+import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
 
 import com.asyncapi.v2.model.channel.ChannelItem;
@@ -49,58 +52,46 @@ public class AsyncApiAnnotationScanner {
     final IndexView index;
     final ConfigResolver configResolver;
 
+    static Set<Type> VISITED_TYPES = new HashSet<>();
+
     public AsyncApiAnnotationScanner(IndexView aIndex, ConfigResolver aConfigResolver) {
         index = aIndex;
         configResolver = aConfigResolver;
     }
 
     public Map<String, ChannelItem> getChannels() {
-        return index.getAnnotations("org.eclipse.microprofile.reactive.messaging.Channel")
+        Stream<AbstractMap.SimpleEntry<String, ChannelItem>> annotatedChannels = index
+                .getAnnotations("org.eclipse.microprofile.reactive.messaging.Channel")
                 .stream()
-                .filter(annotation -> !annotation.value().asString().isEmpty())
-                .map(this::getChannel)
+                .map(annotation -> getChannel(annotation, ResolveType.CHANNEL));
+        Stream<AbstractMap.SimpleEntry<String, ChannelItem>> annotatedIncomings = index
+                .getAnnotations("org.eclipse.microprofile.reactive.messaging.Incoming")
+                .stream()
+                .map(annotation -> getChannel(annotation, ResolveType.INCOMING));
+        Stream<AbstractMap.SimpleEntry<String, ChannelItem>> annotatedOutgoings = index
+                .getAnnotations("org.eclipse.microprofile.reactive.messaging.Outgoing")
+                .stream()
+                .map(annotation -> getChannel(annotation, ResolveType.OUTGOING));
+        return Stream.concat(Stream.concat(annotatedChannels, annotatedIncomings), annotatedOutgoings)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, TreeMap::new));
     }
 
-    //TODO filter internal messaging: decribe in AsyncApi only those channels, that are configured in application.properties
-    AbstractMap.SimpleEntry<String, ChannelItem> getChannel(AnnotationInstance aAnnotationInstance) {
-        boolean isEmitter;
-        Type messageType;
-        String operationId;
-        switch (aAnnotationInstance.target().kind()) {
-            case FIELD:
-                FieldInfo field = aAnnotationInstance.target().asField();
-                operationId = field.declaringClass().name() + "." + field.name();
-                Type annotationTargetType = field.type();
-                isEmitter = annotationTargetType.name().toString().contains("Emitter");
-                Type genericMessageType = annotationTargetType.asParameterizedType().arguments().get(0);
-                switch (genericMessageType.kind()) {
-                    case CLASS ->
-                        messageType = genericMessageType.asClassType();
-                    case PARAMETERIZED_TYPE ->
-                        messageType = genericMessageType.asParameterizedType();
-                    default ->
-                        throw new IllegalArgumentException("unhandled messageType " + genericMessageType.kind());
-                }
-                break;
-
-            //TODO other annotation-targets
-            default:
-                throw new IllegalArgumentException("unknown messageType " + aAnnotationInstance);
-        }
+    AbstractMap.SimpleEntry<String, ChannelItem> getChannel(AnnotationInstance aAnnotationInstance, ResolveType aResolveType) {
+        VISITED_TYPES.clear();
+        ChannelData channelData = new ChannelData(aAnnotationInstance, aResolveType);
         String channelName = aAnnotationInstance.value().asString();
-        if (configResolver.isSmallRyeKafkaTopic(isEmitter, channelName)) {
-            String topic = configResolver.getTopic(isEmitter, channelName);
+        if (configResolver.isSmallRyeKafkaTopic(channelData.isEmitter, channelName)) {
+            String topic = configResolver.getTopic(channelData.isEmitter, channelName);
             MyKafkaChannelBinding channelBinding = new MyKafkaChannelBinding(topic);
             ChannelItem.ChannelItemBuilder channelBuilder = ChannelItem.builder()
                     .bindings(Map.of("kafka", channelBinding));
             Operation operation = Operation.builder()
-                    .message(getMessage(messageType))
-                    .operationId(operationId)
+                    .message(getMessage(channelData.messageType))
+                    .operationId(channelData.operationId)
                     .build();
             addSchemaAnnotationData(aAnnotationInstance.target(), operation);
-            ChannelItem channelItem = isEmitter
+            ChannelItem channelItem = channelData.isEmitter
                     ? channelBuilder.publish(operation).build()
                     : channelBuilder.subscribe(operation).build();
             Channel channel = configResolver.getChannel(channelName);
@@ -111,6 +102,66 @@ public class AsyncApiAnnotationScanner {
         }
         //TODO other than kafka...
         return null;
+    }
+
+    enum ResolveType {
+        CHANNEL,
+        INCOMING,
+        OUTGOING;
+    }
+
+    static class ChannelData {
+
+        String operationId;
+        boolean isEmitter;
+        Type messageType;
+
+        public ChannelData(AnnotationInstance aAnnotationInstance, ResolveType aType) {
+            Type annotationTargetType;
+            MethodInfo method;
+            switch (aType) {
+                case CHANNEL:
+                    FieldInfo field = aAnnotationInstance.target().asField();
+                    operationId = field.declaringClass().name() + "." + field.name();
+                    annotationTargetType = field.type();
+                    isEmitter = annotationTargetType.name().toString().contains("Emitter");
+                    if (annotationTargetType.kind().equals(PARAMETERIZED_TYPE)) {
+                        Type genericMessageType = annotationTargetType.asParameterizedType().arguments().get(0);
+                        messageType = switch (genericMessageType.kind()) {
+                            case CLASS ->
+                                genericMessageType.asClassType();
+                            case PARAMETERIZED_TYPE ->
+                                genericMessageType.asParameterizedType();
+                            default ->
+                                throw new IllegalArgumentException("unhandled messageType " + genericMessageType.kind());
+                        };
+                    } else {
+                        throw new IllegalArgumentException("Channel-field has to be parameterized " + field);
+                    }
+                    break;
+                case INCOMING:
+                    isEmitter = false;
+                    method = aAnnotationInstance.target().asMethod();
+                    operationId = method.declaringClass().name() + "." + method.name();
+                    messageType = resolveType(method.parameterType(0));
+                    break;
+                case OUTGOING:
+                    isEmitter = true;
+                    method = aAnnotationInstance.target().asMethod();
+                    operationId = method.declaringClass().name() + "." + method.name();
+                    messageType = resolveType(method.returnType());
+                    break;
+                default:
+                    throw new AssertionError();
+            }
+
+        }
+
+        final Type resolveType(Type aFirstParameterType) {
+            return aFirstParameterType.kind().equals(PARAMETERIZED_TYPE)
+                    ? aFirstParameterType.asParameterizedType()
+                    : aFirstParameterType;
+        }
     }
 
     public Components getGlobalComponents() {
@@ -206,8 +257,6 @@ public class AsyncApiAnnotationScanner {
             }
         }
     }
-
-    static Set<Type> VISITED_TYPES = new HashSet<>();
 
     Schema getFieldSchema(FieldInfo aFieldInfo, Map<String, Type> aTypeVariableMap) {
         Schema schema = getSchema(aTypeVariableMap.getOrDefault(aFieldInfo.type().toString(), aFieldInfo.type()),

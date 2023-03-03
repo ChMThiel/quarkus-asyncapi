@@ -3,8 +3,9 @@ package io.quarkiverse.asyncapi.annotation.scanner;
 import java.io.Serializable;
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+import com.fasterxml.jackson.annotation.JsonView;
 
 /**
  * Container for KafkaMessages with additional Infos
