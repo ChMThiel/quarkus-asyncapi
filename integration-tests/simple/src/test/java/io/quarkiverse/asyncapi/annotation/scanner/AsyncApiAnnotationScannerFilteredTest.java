@@ -5,8 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.DescribeClusterResult;
+import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -176,58 +182,77 @@ public class AsyncApiAnnotationScannerFilteredTest {
                 .isEqualTo("object");
         assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties")).hasSize(3);
         //BookDate Only Ref available
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/bookDate/$ref").asText())
+        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/bookDate/$ref")
+                .asText())
                 .isEqualTo("#/components/schemas/OffsetDateTime");
         //Part
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/description")
-                .asText())
+        assertThat(
+                asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/description")
+                        .asText())
                 .isEqualTo("Part definition. Part may be a product, a raw material, an equipment or any other part");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/type").asText())
+        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/type")
+                .asText())
                 .isEqualTo("object");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties"))
+        assertThat(
+                asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties"))
                 .hasSize(3);
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties/partTypeId/$ref")
+        assertThat(asyncAPI.at(
+                "/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties/partTypeId/$ref")
                 .asText())
                 .isEqualTo("#/components/schemas/UUID");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties/partTypeId/description")
+        assertThat(asyncAPI.at(
+                "/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties/partTypeId/description")
                 .asText())
                 .isEqualTo("reference to parttype of the part");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties/partGroupId/$ref")
+        assertThat(asyncAPI.at(
+                "/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties/partGroupId/$ref")
                 .asText())
                 .isEqualTo("#/components/schemas/UUID");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties/partGroupId/description")
+        assertThat(asyncAPI.at(
+                "/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties/partGroupId/description")
                 .asText())
                 .isEqualTo("reference to partgroup of the part");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties/externalId/type")
+        assertThat(asyncAPI.at(
+                "/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties/externalId/type")
                 .asText())
                 .isEqualTo("string");
         //Company
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/description")
+        assertThat(asyncAPI
+                .at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/description")
                 .asText())
                 .isEqualTo("Company");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/type").asText())
+        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/type")
+                .asText())
                 .isEqualTo("object");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties"))
+        assertThat(asyncAPI
+                .at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties"))
                 .hasSize(7);
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/payload/type")
+        assertThat(asyncAPI.at(
+                "/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/payload/type")
                 .asText())
                 .isEqualTo("string");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/name/type")
+        assertThat(asyncAPI.at(
+                "/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/name/type")
                 .asText())
                 .isEqualTo("string");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/tenantId/description")
+        assertThat(asyncAPI.at(
+                "/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/tenantId/description")
                 .asText())
                 .isEqualTo("Id references the Tenant");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/description/type")
+        assertThat(asyncAPI.at(
+                "/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/description/type")
                 .asText())
                 .isEqualTo("string");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/info1/type")
+        assertThat(asyncAPI.at(
+                "/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/info1/type")
                 .asText())
                 .isEqualTo("string");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/info2/type")
+        assertThat(asyncAPI.at(
+                "/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/info2/type")
                 .asText())
                 .isEqualTo("string");
-        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/info3/type")
+        assertThat(asyncAPI.at(
+                "/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties/info3/type")
                 .asText())
                 .isEqualTo("string");
         //Servers
@@ -248,8 +273,7 @@ public class AsyncApiAnnotationScannerFilteredTest {
         System.out.println(yaml);
         JsonNode asyncAPI = ObjectMapperFactory.yaml().readTree(yaml);
         //when
-        assertThat(asyncAPI.at("/channels")).isInstanceOf(ObjectNode.class
-        );
+        assertThat(asyncAPI.at("/channels")).isInstanceOf(ObjectNode.class);
         assertThat(asyncAPI.at("/channels")).hasSizeGreaterThanOrEqualTo(5);
 
         //IncomingChannelPart
