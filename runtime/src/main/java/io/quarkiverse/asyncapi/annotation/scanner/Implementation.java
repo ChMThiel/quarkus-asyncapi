@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
 public @interface Implementation {
 
     /**
-     * Array of classes, contained in the message. E.g. if a Message List&lt;A&lt;B&gt;&gt; can be described as
+     * Array of classes, contained in the message. E.g. if a Message <code>List&lt;A&lt;B&gt;&gt;</code> can be described as
      * <code>@Implementation({List.class, A.class, B.class})</code>
      *
      * @return
