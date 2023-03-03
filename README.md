@@ -6,6 +6,9 @@ Acces scan-result under
 
 ![grafik](https://user-images.githubusercontent.com/70508469/219752798-2c198de7-8a9a-471a-a86a-358cca0cd65f.png)
 
+TODO
+* read kafka-data from org.apache.kafka.clients.admin.AdminClient
+
 
 # Quarkus Async API extension
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
