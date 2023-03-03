@@ -18,7 +18,7 @@ import io.quarkus.test.junit.QuarkusTest;
 public class AsyncApiAnnotationScannerFilteredTest {
 
     @Test
-    void shouldScanAndFilterEmitterAnnotations_CheckOutGoingTransferMessage() throws Exception {
+    void shouldScanAndFilterEmitterAnnotations_CheckOutGoingTransferMessage_TransferChannel1() throws Exception {
         //given
         String yaml = Files.readAllLines(Path.of(FOLDER + "/asyncApi.yaml")).stream().collect(Collectors.joining("\n"));
         assertThat(yaml).isNotNull();
@@ -29,6 +29,16 @@ public class AsyncApiAnnotationScannerFilteredTest {
         assertThat(asyncAPI.at("/channels")).hasSizeGreaterThanOrEqualTo(5);
         assertThat(asyncAPI.at("/channels/prices").isMissingNode()).isFalse();
         assertThat(asyncAPI.at("/channels/prices-intern").isMissingNode()).as("intern channels should be ignored").isTrue();
+        //TransferChannel1
+        assertThat(asyncAPI.at("/channels/transfer-channel1/description").asText())
+                .isEqualTo("description of the transfer-channel1 from application.properties");
+        assertThat(asyncAPI.at("/channels/transfer-channel1/bindings/kafka/topic").asText())
+                .isEqualTo("transfer-topic");
+        //TransferChannel1 Publish
+        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/description").asText())
+                .isEqualTo("transferEmitter description1");
+        assertThat(asyncAPI.at("/channels/transfer-channel1/publish/operationId").asText())
+                .isEqualTo("io.quarkiverse.asyncapi.annotation.scanner.DummyController.transferEmitter1");
         //TransferMessage
         assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/contentType").asText())
                 .isEqualTo("application/json");
@@ -61,7 +71,6 @@ public class AsyncApiAnnotationScannerFilteredTest {
         assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/type").asText())
                 .isEqualTo("object");
         assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties")).hasSize(3);
-
         //BookDate Only Ref available
         assertThat(asyncAPI
                 .at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/bookDate/$ref").asText())
@@ -150,7 +159,7 @@ public class AsyncApiAnnotationScannerFilteredTest {
     }
 
     @Test
-    void shouldScanAndFilterEmitterAnnotations_CheckIncomingGecMessage() throws Exception {
+    void shouldScanAndFilterEmitterAnnotations_CheckIncomingGecMessage_IncomingChannelPart() throws Exception {
         //given
         String yaml = Files.readAllLines(Path.of(FOLDER + "/asyncApi.yaml")).stream().collect(Collectors.joining("\n"));
         assertThat(yaml).isNotNull();
@@ -159,6 +168,13 @@ public class AsyncApiAnnotationScannerFilteredTest {
         //when
         assertThat(asyncAPI.at("/channels")).isInstanceOf(ObjectNode.class);
         assertThat(asyncAPI.at("/channels")).hasSizeGreaterThanOrEqualTo(5);
+
+        //IncomingChannelPart
+        assertThat(asyncAPI.at("/channels/incoming-channel-part/bindings/kafka/topic").asText())
+                .isEqualTo("incoming-channel-part-topic");
+        //IncomingChannelPart Subscribe
+        assertThat(asyncAPI.at("/channels/incoming-channel-part/subscribe/operationId").asText())
+                .isEqualTo("io.quarkiverse.asyncapi.annotation.scanner.DummyController.receiveMessage");
         //GecMessage
         assertThat(asyncAPI.at("/channels/incoming-channel-part/subscribe/message/contentType").asText())
                 .isEqualTo("application/json");
@@ -180,17 +196,30 @@ public class AsyncApiAnnotationScannerFilteredTest {
         //Part
         assertThat(asyncAPI.at("/channels/incoming-channel-part/subscribe/message/payload/properties/value/type").asText())
                 .isEqualTo("object");
-        assertThat(asyncAPI.at("/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties"))
-                .hasSize(10);
         assertThat(asyncAPI
                 .at("/channels/incoming-channel-part/subscribe/message/payload/properties/value/description")
                 .asText()).isEqualTo("Part definition. Part may be a product, a raw material, an equipment or any other part");
+        assertThat(asyncAPI.at("/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties"))
+                .hasSize(10);
+        //
         assertThat(asyncAPI.at(
-                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/partTypeId/$ref")
-                .asText()).isEqualTo("#/components/schemas/UUID");
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/availabilityState/enum"))
+                .hasSize(4);
         assertThat(asyncAPI.at(
-                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/partTypeId/description")
-                .asText()).isEqualTo("reference to parttype of the part");
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/dimension/description")
+                .asText()).isEqualTo("Dimension of the part");
+        assertThat(asyncAPI.at(
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/dimension/type")
+                .asText()).isEqualTo("object");
+        assertThat(asyncAPI.at(
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/externalId/type")
+                .asText()).isEqualTo("string");
+        assertThat(asyncAPI.at(
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/materialType/description")
+                .asText()).isEqualTo("Material Type of the part: MATERIAL, PRODUCT");
+        assertThat(asyncAPI.at(
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/materialType/enum"))
+                .hasSize(3);
         assertThat(asyncAPI.at(
                 "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/partGroupId/$ref")
                 .asText()).isEqualTo("#/components/schemas/UUID");
@@ -198,7 +227,31 @@ public class AsyncApiAnnotationScannerFilteredTest {
                 "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/partGroupId/description")
                 .asText()).isEqualTo("reference to partgroup of the part");
         assertThat(asyncAPI.at(
-                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/externalId/type")
-                .asText()).isEqualTo("string");
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/partTypeId/$ref")
+                .asText()).isEqualTo("#/components/schemas/UUID");
+        assertThat(asyncAPI.at(
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/partTypeId/description")
+                .asText()).isEqualTo("reference to parttype of the part");
+        assertThat(asyncAPI.at(
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/procurementType/description")
+                .asText()).isEqualTo("PROCUREMENT TYPE of the part: INHOUSE, EXTERNAL");
+        assertThat(asyncAPI.at(
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/procurementType/enum"))
+                .hasSize(2);
+        assertThat(asyncAPI.at(
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/workorderFinishMode/enum"))
+                .hasSize(3);
+        assertThat(asyncAPI.at(
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/workorderQuantityAdjustmentMode/enum"))
+                .hasSize(2);
+        assertThat(asyncAPI.at(
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/workorderQuantityOverbookPercentage/description")
+                .asText())
+                .isEqualTo(
+                        "Percentage value that the workorder quantity could be overbooked. In combination with finishMode the workorder quantity could be overbooked up to this value before the workorder state will be set automatically to finished");
+        assertThat(asyncAPI.at(
+                "/channels/incoming-channel-part/subscribe/message/payload/properties/value/properties/workorderQuantityOverbookPercentage/type")
+                .asText())
+                .isEqualTo("integer");
     }
 }

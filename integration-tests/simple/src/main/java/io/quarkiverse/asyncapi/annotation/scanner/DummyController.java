@@ -40,7 +40,7 @@ public class DummyController {
     Emitter<TransferMessage<String>> transferEmitter2;
 
     @Incoming("incoming-channel-string")
-//    @Implementation({ GecMessage.class, Part.class })
+    @Implementation({ GecMessage.class, Part.class })
     public void receiveMessage(String aData) {
         //Do nothing
     }
@@ -51,7 +51,7 @@ public class DummyController {
     }
 
     @Outgoing("outgoing-channel-string")
-    @Implementation({ GecMessage.class, List.class, Part.class }) //GecMessage<List<Part>>
+    @Implementation({ GecMessage.class, List.class, Part.class })
     public String sendMessage() {
         //Do nothing
         return null;
