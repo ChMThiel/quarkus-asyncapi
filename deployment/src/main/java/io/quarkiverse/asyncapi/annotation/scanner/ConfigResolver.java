@@ -1,6 +1,7 @@
 package io.quarkiverse.asyncapi.annotation.scanner;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -49,6 +50,12 @@ public class ConfigResolver {
         return ConfigProvider.getConfig()
                 .getOptionalValue("kafka.bootstrap.servers", String.class)
                 .orElse("urn:com:kafka:server");
+    }
+
+    public boolean isSmallRyeKafkaTopic(boolean aIsEmitter, String aChannel) {
+        String configKey = "mp.messaging." + (aIsEmitter ? "outgoing" : "incoming") + "." + aChannel + ".connector";
+        Optional<String> connector = ConfigProvider.getConfig().getOptionalValue(configKey, String.class);
+        return connector.isPresent() && connector.get().equals("smallrye-kafka");
     }
 
     public String getTopic(boolean aIsEmitter, String aChannel) {

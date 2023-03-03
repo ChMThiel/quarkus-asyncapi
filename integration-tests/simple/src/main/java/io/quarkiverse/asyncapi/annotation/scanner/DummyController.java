@@ -5,8 +5,11 @@ import javax.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.eclipse.microprofile.reactive.messaging.Outgoing;
 import org.reactivestreams.Publisher;
 
+import io.smallrye.mutiny.Multi;
 import io.smallrye.reactive.messaging.annotations.Broadcast;
 
 /**
@@ -33,5 +36,37 @@ public class DummyController {
     @Channel("transfer-channel2")
     @Schema(description = "transferEmitter description2")
     Emitter<TransferMessage<String>> transferEmitter2;
+
+    @Incoming("incoming-channel-string")
+    @Implementation({ GecMessage.class, Part.class })
+    public void receiveMessage(String aData) {
+        //Do nothing
+    }
+
+    @Incoming("incoming-channel-part")
+    public void receiveMessage(GecMessage<Part> aPart) {
+        //Do nothing
+    }
+
+    @Outgoing("outgoing-channel-string")
+    @Implementation({ GecMessage.class, Part.class })
+    public String sendMessage() {
+        //Do nothing
+        return null;
+    }
+
+    @Outgoing("outgoing-channel-part")
+    public GecMessage<Part> sendMessageTyped() {
+        //Do nothing
+        return null;
+    }
+
+    //ignore internal channels that have no application.properties
+    @Channel("prices-intern")
+    Multi<Double> pricesIntern;
+
+    //no inject, there is no implementation for Multi in classpath -> Quarkus won't start
+    @Channel("prices")
+    Multi<Double> prices;
 
 }

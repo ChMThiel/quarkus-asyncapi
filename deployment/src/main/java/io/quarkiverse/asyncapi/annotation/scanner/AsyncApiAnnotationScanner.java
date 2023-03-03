@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -58,9 +59,11 @@ public class AsyncApiAnnotationScanner {
                 .stream()
                 .filter(annotation -> !annotation.value().asString().isEmpty())
                 .map(this::getChannel)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, TreeMap::new));
     }
 
+    //TODO filter internal messaging: decribe in AsyncApi only those channels, that are configured in application.properties
     AbstractMap.SimpleEntry<String, ChannelItem> getChannel(AnnotationInstance aAnnotationInstance) {
         boolean isEmitter;
         Type messageType;
@@ -87,23 +90,27 @@ public class AsyncApiAnnotationScanner {
                 throw new IllegalArgumentException("unknown messageType " + aAnnotationInstance);
         }
         String channelName = aAnnotationInstance.value().asString();
-        String topic = configResolver.getTopic(isEmitter, channelName);
-        MyKafkaChannelBinding channelBinding = new MyKafkaChannelBinding(topic);
-        ChannelItem.ChannelItemBuilder channelBuilder = ChannelItem.builder()
-                .bindings(Map.of("kafka", channelBinding));
-        Operation operation = Operation.builder()
-                .message(getMessage(messageType))
-                .operationId(operationId)
-                .build();
-        addSchemaAnnotationData(aAnnotationInstance.target(), operation);
-        ChannelItem channelItem = isEmitter
-                ? channelBuilder.publish(operation).build()
-                : channelBuilder.subscribe(operation).build();
-        Channel channel = configResolver.getChannel(channelName);
-        if (channel != null) {
-            channel.description.ifPresent(channelItem::setDescription);
+        if (configResolver.isSmallRyeKafkaTopic(isEmitter, channelName)) {
+            String topic = configResolver.getTopic(isEmitter, channelName);
+            MyKafkaChannelBinding channelBinding = new MyKafkaChannelBinding(topic);
+            ChannelItem.ChannelItemBuilder channelBuilder = ChannelItem.builder()
+                    .bindings(Map.of("kafka", channelBinding));
+            Operation operation = Operation.builder()
+                    .message(getMessage(messageType))
+                    .operationId(operationId)
+                    .build();
+            addSchemaAnnotationData(aAnnotationInstance.target(), operation);
+            ChannelItem channelItem = isEmitter
+                    ? channelBuilder.publish(operation).build()
+                    : channelBuilder.subscribe(operation).build();
+            Channel channel = configResolver.getChannel(channelName);
+            if (channel != null) {
+                channel.description.ifPresent(channelItem::setDescription);
+            }
+            return new AbstractMap.SimpleEntry<>(channelName, channelItem);
         }
-        return new AbstractMap.SimpleEntry<>(channelName, channelItem);
+        //TODO other than kafka...
+        return null;
     }
 
     public Components getGlobalComponents() {

@@ -22,11 +22,13 @@ public class AsyncApiAnnotationScannerFilteredTest {
         //given
         String yaml = Files.readAllLines(Path.of(FOLDER + "/asyncApi.yaml")).stream().collect(Collectors.joining("\n"));
         assertThat(yaml).isNotNull();
-        //        System.out.println(yaml);
+        System.out.println(yaml);
         JsonNode asyncAPI = ObjectMapperFactory.yaml().readTree(yaml);
         //when
         assertThat(asyncAPI.at("/channels")).isInstanceOf(ObjectNode.class);
-        assertThat(asyncAPI.at("/channels")).hasSize(4);
+        assertThat(asyncAPI.at("/channels")).hasSize(5);
+        assertThat(asyncAPI.at("/channels/prices").isMissingNode()).isFalse();
+        assertThat(asyncAPI.at("/channels/prices-intern").isMissingNode()).as("intern channels should be ignored").isTrue();
         assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload")).hasSize(3);
         assertThat(asyncAPI
                 .at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties"))
