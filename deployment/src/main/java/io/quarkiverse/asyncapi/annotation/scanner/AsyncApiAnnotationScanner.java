@@ -57,11 +57,11 @@ public class AsyncApiAnnotationScanner {
         return index.getAnnotations("org.eclipse.microprofile.reactive.messaging.Channel")
                 .stream()
                 .filter(annotation -> !annotation.value().asString().isEmpty())
-                .map(this::getChannelItem)
+                .map(this::getChannel)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, TreeMap::new));
     }
 
-    AbstractMap.SimpleEntry<String, ChannelItem> getChannelItem(AnnotationInstance aAnnotationInstance) {
+    AbstractMap.SimpleEntry<String, ChannelItem> getChannel(AnnotationInstance aAnnotationInstance) {
         boolean isEmitter;
         Type messageType;
         String operationId;
@@ -84,7 +84,7 @@ public class AsyncApiAnnotationScanner {
 
             //TODO other annotation-targets
             default:
-                throw new IllegalArgumentException("unknwon messageType " + aAnnotationInstance);
+                throw new IllegalArgumentException("unknown messageType " + aAnnotationInstance);
         }
         String channelName = aAnnotationInstance.value().asString();
         String topic = configResolver.getTopic(isEmitter, channelName);

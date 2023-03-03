@@ -3,7 +3,7 @@ package io.quarkiverse.asyncapi.annotation.scanner.config;
 import java.util.Map;
 import java.util.Optional;
 
-import io.quarkiverse.asyncapi.annotation.scanner.AAFilter;
+import io.quarkiverse.asyncapi.annotation.scanner.AsyncApiFilter;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigItem;
 import io.quarkus.runtime.annotations.ConfigPhase;

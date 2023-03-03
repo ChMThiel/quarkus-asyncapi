@@ -28,8 +28,8 @@ public class AsyncApiAnnotationScannerFilteredTest {
         assertThat(asyncAPI.at("/channels")).isInstanceOf(ObjectNode.class);
         assertThat(asyncAPI.at("/channels")).hasSize(4);
         assertThat(asyncAPI.at("/channels/transfer-channel1/publish/message/payload")).hasSize(3);
-        assertThat(
-                asyncAPI.at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties"))
+        assertThat(asyncAPI
+                .at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/part/properties"))
                 .hasSize(3);
         assertThat(asyncAPI
                 .at("/channels/transfer-channel1/publish/message/payload/properties/value/properties/company/properties"))
@@ -40,5 +40,8 @@ public class AsyncApiAnnotationScannerFilteredTest {
         assertThat(asyncAPI
                 .at("/channels/transfer-channel1/description").asText())
                 .isEqualTo("description of the transfer-channel1 from application.properties");
+        assertThat(asyncAPI
+                .at("/channels/transfer-channel2/description").asText())
+                .isEqualTo("description of the transfer-channel2 from application.properties");
     }
 }

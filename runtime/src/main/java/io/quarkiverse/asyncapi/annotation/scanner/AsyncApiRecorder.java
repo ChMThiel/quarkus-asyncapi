@@ -59,7 +59,7 @@ public class AsyncApiRecorder {
 
     AsyncAPI filter(AsyncAPI aAsyncAPI, AsyncApiRuntimeConfig aConfig) {
         AsyncAPI result = aAsyncAPI;
-        AAFilter filter = getFilter(aConfig);
+        AsyncApiFilter filter = getFilter(aConfig);
         if (filter != null) {
             result = filter.filterAsyncAPI(aAsyncAPI);
             Map<String, ChannelItem> filteredChannels = result.getChannels().entrySet().stream()
@@ -70,13 +70,13 @@ public class AsyncApiRecorder {
         return result;
     }
 
-    AAFilter getFilter(AsyncApiRuntimeConfig aConfig) {
+    AsyncApiFilter getFilter(AsyncApiRuntimeConfig aConfig) {
         Optional<String> filterClassName = aConfig.filter;
         if (filterClassName.isPresent()) {
             try {
                 ClassLoader loader = Thread.currentThread().getContextClassLoader();
                 Class<?> c = loader.loadClass(filterClassName.get());
-                return (AAFilter) c.getDeclaredConstructor().newInstance();
+                return (AsyncApiFilter) c.getDeclaredConstructor().newInstance();
             } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException
                     | InvocationTargetException | NoSuchMethodException | SecurityException ex) {
                 LOGGER.log(Level.SEVERE, "Filter-class " + filterClassName + " not found", ex);

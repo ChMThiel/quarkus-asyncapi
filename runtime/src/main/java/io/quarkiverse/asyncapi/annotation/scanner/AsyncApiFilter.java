@@ -8,7 +8,7 @@ import com.asyncapi.v2.model.channel.ChannelItem;
  *
  * @author christiant
  */
-public interface AAFilter {
+public interface AsyncApiFilter {
 
     default AsyncAPI filterAsyncAPI(AsyncAPI aAsyncAPI) {
         return aAsyncAPI;

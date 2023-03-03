@@ -52,7 +52,7 @@ public class ConfigResolver {
     }
 
     public String getTopic(boolean aIsEmitter, String aChannel) {
-        String configKey = "mp.messaging." + (aIsEmitter ? "outgoing" : "incomming") + "." + aChannel + ".topic";
+        String configKey = "mp.messaging." + (aIsEmitter ? "outgoing" : "incoming") + "." + aChannel + ".topic";
         return ConfigProvider.getConfig().getOptionalValue(configKey, String.class).orElse(aChannel);
     }
 

@@ -20,7 +20,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * @since 13.02.2023
  */
 @RegisterForReflection
-public class MyAsyncApiFilter implements AAFilter {
+public class MyAsyncApiFilter implements AsyncApiFilter {
 
     @Override
     public ChannelItem filterChannelItem(String aChannel, ChannelItem aChannelItem) {
