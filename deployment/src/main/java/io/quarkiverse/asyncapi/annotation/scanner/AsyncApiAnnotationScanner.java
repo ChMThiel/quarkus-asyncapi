@@ -31,6 +31,7 @@ import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.JandexReflection;
 import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
 import com.asyncapi.v2.model.channel.ChannelItem;
@@ -40,7 +41,6 @@ import com.asyncapi.v2.model.component.Components;
 import com.asyncapi.v2.model.schema.Schema;
 
 import io.quarkiverse.asyncapi.annotation.scanner.config.Channel;
-import org.jboss.jandex.ParameterizedType;
 
 /**
  * @since 09.02.2023
@@ -164,7 +164,7 @@ public class AsyncApiAnnotationScanner {
                 } else {
                     ParameterizedType type = null;
                     for (int i = types.length - 1; i >= 0; i--) {
-                        type = ParameterizedType.create(types[i].name(), type != null ? new Type[]{type} : null, null);
+                        type = ParameterizedType.create(types[i].name(), type != null ? new Type[] { type } : null, null);
                     }
                     messageType = type;
                 }
