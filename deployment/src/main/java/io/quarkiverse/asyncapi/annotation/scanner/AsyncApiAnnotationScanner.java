@@ -41,6 +41,8 @@ import com.asyncapi.v2.model.component.Components;
 import com.asyncapi.v2.model.schema.Schema;
 
 import io.quarkiverse.asyncapi.annotation.scanner.config.Channel;
+import io.quarkiverse.asyncapi.annotation.scanner.kafka.binding.KafkaChannelBinding;
+import io.quarkiverse.asyncapi.annotation.scanner.kafka.binding.KafkaResolver;
 
 /**
  * @since 09.02.2023
@@ -84,7 +86,7 @@ public class AsyncApiAnnotationScanner {
         String channelName = aAnnotationInstance.value().asString();
         if (configResolver.isSmallRyeKafkaTopic(channelData.isEmitter, channelName)) {
             String topic = configResolver.getTopic(channelData.isEmitter, channelName);
-            MyKafkaChannelBinding channelBinding = new MyKafkaChannelBinding(topic);
+            KafkaChannelBinding channelBinding = new KafkaResolver().getKafkaChannelBindings(topic);
             ChannelItem.ChannelItemBuilder channelBuilder = ChannelItem.builder()
                     .bindings(Map.of("kafka", channelBinding));
             Operation operation = Operation.builder()
