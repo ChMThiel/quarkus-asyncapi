@@ -84,7 +84,7 @@ public class AsyncApiAnnotationScanner {
         VISITED_TYPES.clear();
         ChannelData channelData = new ChannelData(aAnnotationInstance, aResolveType);
         String channelName = aAnnotationInstance.value().asString();
-        if (configResolver.isSmallRyeKafkaTopic(channelData.isEmitter, channelName)) {
+        if (channelData.operationId != null && configResolver.isSmallRyeKafkaTopic(channelData.isEmitter, channelName)) {
             String topic = configResolver.getTopic(channelData.isEmitter, channelName);
             KafkaChannelBinding channelBinding = new KafkaResolver().getKafkaChannelBindings(topic);
             ChannelItem.ChannelItemBuilder channelBuilder = ChannelItem.builder()
@@ -124,9 +124,15 @@ public class AsyncApiAnnotationScanner {
             MethodInfo method;
             switch (aType) {
                 case CHANNEL:
-                    FieldInfo field = aAnnotationInstance.target().asField();
-                    operationId = field.declaringClass().name() + "." + field.name();
-                    annotationTargetType = field.type();
+                    switch (aAnnotationInstance.target().kind()) {
+                        case FIELD:
+                            FieldInfo field = aAnnotationInstance.target().asField();
+                            operationId = field.declaringClass().name() + "." + field.name();
+                            annotationTargetType = field.type();
+                            break;
+                        default:
+                            return;
+                    }
                     isEmitter = annotationTargetType.name().toString().contains("Emitter");
                     if (annotationTargetType.kind().equals(PARAMETERIZED_TYPE)) {
                         Type genericMessageType = annotationTargetType.asParameterizedType().arguments().get(0);
@@ -139,7 +145,8 @@ public class AsyncApiAnnotationScanner {
                                 throw new IllegalArgumentException("unhandled messageType " + genericMessageType.kind());
                         };
                     } else {
-                        throw new IllegalArgumentException("Channel-field has to be parameterized " + field);
+                        throw new IllegalArgumentException(
+                                "Channel-field has to be parameterized " + aAnnotationInstance.target());
                     }
                     break;
                 case INCOMING:
