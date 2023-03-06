@@ -2,12 +2,17 @@ package io.quarkiverse.asyncapi.annotation.scanner;
 
 import com.asyncapi.v2.binding.kafka.KafkaChannelBinding;
 
+import lombok.Builder;
+import lombok.Getter;
+
 /**
  * TODO replace with KafkaChannelBinding as soon the topic/descriptions are added there
  *
  * @author christiant
  * @see https://github.com/asyncapi/bindings/blob/master/kafka/README.md#channel-binding-object
  */
+@Getter
+@Builder
 public class MyKafkaChannelBinding extends KafkaChannelBinding {
 
     //TODO read with org.apache.kafka.clients.admin.AdminClient;

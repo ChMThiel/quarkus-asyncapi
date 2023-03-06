@@ -155,10 +155,13 @@ public class AsyncApiAnnotationScanner {
                 default:
                     throw new AssertionError();
             }
-            AnnotationInstance implementation = aAnnotationInstance.target().annotation(Implementation.class);
-            if (implementation != null) {
-                //don't use messageTyp but the annotated types
-                Type[] types = implementation.value().asClassArray();
+            AnnotationInstance asyncApiSchema = aAnnotationInstance.target()
+                    .annotation(io.quarkiverse.asyncapi.spi.Schema.class);
+            if (asyncApiSchema != null
+                    && asyncApiSchema.value("implementation") != null
+                    && asyncApiSchema.value("implementation").asClassArray().length > 0) {
+                //don't use messageType but the annotated types
+                Type[] types = asyncApiSchema.value("implementation").asClassArray();
                 if (types.length == 1) {
                     messageType = types[0];
                 } else {
@@ -293,13 +296,20 @@ public class AsyncApiAnnotationScanner {
 
     void addSchemaAnnotationStringData(AnnotationTarget aAnnotationTarget, String aAnnotationFieldName,
             Consumer<String> aSetter) {
-        AnnotationInstance annotation = aAnnotationTarget.declaredAnnotation(
+        AnnotationInstance asyncApiSchemaAnnotation = aAnnotationTarget
+                .declaredAnnotation(io.quarkiverse.asyncapi.spi.Schema.class);
+        AnnotationInstance openApiAnnotation = aAnnotationTarget.declaredAnnotation(
                 DotName.createSimple("org.eclipse.microprofile.openapi.annotations.media.Schema"));
-        if (annotation != null) {
-            AnnotationValue value = annotation.value(aAnnotationFieldName);
-            if (value != null) {
-                aSetter.accept(value.asString());
-            }
+        AnnotationValue annotationValue;
+        if (asyncApiSchemaAnnotation != null) {
+            annotationValue = asyncApiSchemaAnnotation.value(aAnnotationFieldName);
+        } else if (openApiAnnotation != null) {
+            annotationValue = openApiAnnotation.value(aAnnotationFieldName);
+        } else {
+            annotationValue = null;
+        }
+        if (annotationValue != null && !annotationValue.asString().isEmpty()) {
+            aSetter.accept(annotationValue.asString());
         }
     }
 

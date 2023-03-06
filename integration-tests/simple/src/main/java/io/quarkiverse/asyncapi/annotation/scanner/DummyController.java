@@ -4,13 +4,13 @@ import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 import org.reactivestreams.Publisher;
 
+import io.quarkiverse.asyncapi.spi.Schema;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.reactive.messaging.annotations.Broadcast;
 
@@ -23,16 +23,16 @@ public class DummyController {
     //no inject, there is no implementation for Emitter in classpath -> Quarkus won't start
     @Channel("channel-x")
     @Broadcast
-    @Schema(description = "testMessage Emmiter description")
+    @org.eclipse.microprofile.openapi.annotations.media.Schema(description = "testMessage Emmiter description")
     Emitter<TestMessage<TestMessageData>> emitter;
     //no inject, there is no implementation for Publisher in classpath -> Quarkus won't start
     @Channel("channel-y")
-    @Schema(description = "testMessage Publisher description")
+    @org.eclipse.microprofile.openapi.annotations.media.Schema(description = "testMessage Publisher description")
     Publisher<TestMessage<TestMessageData>> publisher;
     //no inject, there is no implementation for Publisher in classpath -> Quarkus won't start
 
     @Channel("transfer-channel1")
-    @Schema(description = "transferEmitter description1")
+    @org.eclipse.microprofile.openapi.annotations.media.Schema(description = "transferEmitter description1")
     Emitter<TransferMessage<TransferWorkorderMessage>> transferEmitter1;
 
     @Channel("transfer-channel2")
@@ -40,7 +40,7 @@ public class DummyController {
     Emitter<TransferMessage<String>> transferEmitter2;
 
     @Incoming("incoming-channel-string")
-    @Implementation({ GecMessage.class, Part.class })
+    @Schema(implementation = { GecMessage.class, Part.class })
     public void receiveMessage(String aData) {
         //Do nothing
     }
@@ -51,7 +51,7 @@ public class DummyController {
     }
 
     @Outgoing("outgoing-channel-string")
-    @Implementation({ GecMessage.class, List.class, Part.class })
+    @Schema(implementation = { GecMessage.class, List.class, Part.class })
     public String sendMessage() {
         //Do nothing
         return null;
