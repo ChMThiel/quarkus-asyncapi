@@ -41,18 +41,18 @@ public class DummyController {
 
     @Incoming("incoming-channel-string")
     @Schema(implementation = { GecMessage.class, Part.class })
-    public void receiveMessage(String aData) {
+    public void receiveMessageString(String aData) {
         //Do nothing
     }
 
     @Incoming("incoming-channel-part")
-    public void receiveMessage(GecMessage<Part> aPart) {
+    public void receiveMessagePart(GecMessage<Part> aPart) {
         //Do nothing
     }
 
     @Outgoing("outgoing-channel-string")
     @Schema(implementation = { GecMessage.class, List.class, Part.class })
-    public String sendMessage() {
+    public String sendMessageString() {
         //Do nothing
         return null;
     }

@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
  * @since 06.03.2023
  */
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
