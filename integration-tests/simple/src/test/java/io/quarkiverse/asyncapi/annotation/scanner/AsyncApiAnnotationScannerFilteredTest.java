@@ -276,7 +276,7 @@ public class AsyncApiAnnotationScannerFilteredTest {
                 .isEqualTo("incoming-channel-part-topic");
         //IncomingChannelPart Subscribe
         assertThat(asyncAPI.at("/channels/incoming-channel-part/subscribe/operationId").asText())
-                .isEqualTo("io.quarkiverse.asyncapi.annotation.scanner.DummyController.receiveMessage");
+                .isEqualTo("io.quarkiverse.asyncapi.annotation.scanner.DummyController.receiveMessagePart");
         //GecMessage
         assertThat(asyncAPI.at("/channels/incoming-channel-part/subscribe/message/contentType").asText())
                 .isEqualTo("application/json");
@@ -373,7 +373,7 @@ public class AsyncApiAnnotationScannerFilteredTest {
                 .isEqualTo("incoming-channel-string-topic");
         //IncomingChannelPart Subscribe
         assertThat(asyncAPI.at("/channels/incoming-channel-string/subscribe/operationId").asText())
-                .isEqualTo("io.quarkiverse.asyncapi.annotation.scanner.DummyController.receiveMessage");
+                .isEqualTo("io.quarkiverse.asyncapi.annotation.scanner.DummyController.receiveMessageString");
         //GecMessage
         assertThat(asyncAPI.at("/channels/incoming-channel-string/subscribe/message/contentType").asText())
                 .isEqualTo("application/json");
@@ -471,7 +471,7 @@ public class AsyncApiAnnotationScannerFilteredTest {
                 .isEqualTo("outgoing-channel-string-topic");
         //IncomingChannelPart Subscribe
         assertThat(asyncAPI.at("/channels/outgoing-channel-string/publish/operationId").asText())
-                .isEqualTo("io.quarkiverse.asyncapi.annotation.scanner.DummyController.sendMessage");
+                .isEqualTo("io.quarkiverse.asyncapi.annotation.scanner.DummyController.sendMessageString");
         //GecMessage
         assertThat(asyncAPI.at("/channels/outgoing-channel-string/publish/message/contentType").asText())
                 .isEqualTo("application/json");

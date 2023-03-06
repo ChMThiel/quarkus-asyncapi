@@ -34,7 +34,6 @@ public class KafkaResolver {
         if (bootStrapServers.isPresent()) {
             Map<String, Object> properties = Map.of("bootstrap.servers", bootStrapServers.get());
             try (AdminClient client = AdminClient.create(properties)) {
-                System.out.println("Topic:" + aTopic);
                 DescribeTopicsResult topicDescription = client.describeTopics(
                         Set.of(aTopic), new DescribeTopicsOptions().timeoutMs(1000));
                 List<TopicPartitionInfo> partitionInfos = topicDescription.topicNameValues().get(aTopic).get().partitions();
