@@ -25,12 +25,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.version>2.16.3.Final</quarkus.version>
-        <version.org.assertj>3.23.1</version.org.assertj>
-        <version.org.slf4j>2.0.3</version.org.slf4j>
+        <version.org.assertj>3.24.2</version.org.assertj>
+        <version.org.slf4j>2.0.6</version.org.slf4j>
         <version.asyncapi.core>1.0.0-EAP-1</version.asyncapi.core>
-        <version.org.mockito>4.10.0</version.org.mockito>
-        <version.com.fasterxml.jackson>2.14.1</version.com.fasterxml.jackson>
-        <version.org.projectlombok>1.18.24</version.org.projectlombok>
+        <version.org.mockito>4.11.0</version.org.mockito>
+        <version.com.fasterxml.jackson>2.14.2</version.com.fasterxml.jackson>
+        <version.org.projectlombok>1.18.26</version.org.projectlombok>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -44,7 +44,7 @@
             <dependency>
                 <groupId>io.vertx</groupId>
                 <artifactId>vertx-core</artifactId>
-                <version>4.3.7</version>
+                <version>4.3.8</version>
             </dependency>
             <dependency>
                 <groupId>io.quarkus</groupId>
@@ -83,6 +83,7 @@
                 <artifactId>jackson-dataformat-yaml</artifactId>
                 <version>${version.com.fasterxml.jackson}</version>
             </dependency>
+            <!--Just for Tests Simple Project-->
             <dependency>
                 <groupId>io.smallrye.reactive</groupId>
                 <artifactId>smallrye-reactive-messaging-api</artifactId>
@@ -91,7 +92,7 @@
             <dependency>
                 <groupId>org.eclipse.microprofile.openapi</groupId>
                 <artifactId>microprofile-openapi-api</artifactId>
-                <version>2.0.1</version>
+                <version>3.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
