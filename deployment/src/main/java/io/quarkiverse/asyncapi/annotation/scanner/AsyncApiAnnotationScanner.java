@@ -5,6 +5,9 @@ import static org.jboss.jandex.Type.Kind.PARAMETERIZED_TYPE;
 import static org.jboss.jandex.Type.Kind.PRIMITIVE;
 
 import java.lang.reflect.Modifier;
+import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -19,6 +22,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,6 +38,7 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
+import com.asyncapi.v2.model.ExternalDocumentation;
 import com.asyncapi.v2.model.channel.ChannelItem;
 import com.asyncapi.v2.model.channel.message.Message;
 import com.asyncapi.v2.model.channel.operation.Operation;
@@ -43,8 +48,6 @@ import com.asyncapi.v2.model.schema.Schema;
 import io.quarkiverse.asyncapi.annotation.scanner.config.Channel;
 import io.quarkiverse.asyncapi.annotation.scanner.kafka.binding.KafkaChannelBinding;
 import io.quarkiverse.asyncapi.annotation.scanner.kafka.binding.KafkaResolver;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @since 09.02.2023
@@ -179,7 +182,7 @@ public class AsyncApiAnnotationScanner {
                 } else {
                     ParameterizedType type = null;
                     for (int i = types.length - 1; i >= 0; i--) {
-                        type = ParameterizedType.create(types[i].name(), type != null ? new Type[]{type} : null, null);
+                        type = ParameterizedType.create(types[i].name(), type != null ? new Type[] { type } : null, null);
                     }
                     messageType = type;
                 }
@@ -195,9 +198,14 @@ public class AsyncApiAnnotationScanner {
 
     public Components getGlobalComponents() {
         return Components.builder()
-                .schemas(Map.of(
+                .schemas(new TreeMap<>(Map.of(
                         "OffsetDateTime", Schema.builder()
                                 .format("date-time")
+                                .externalDocs(ExternalDocumentation.builder()
+                                        .description(
+                                                "A date-time with an offset from UTC/Greenwich in the ISO-8601 calendar system")
+                                        .url("https://docs.oracle.com/javase/8/docs/api/java/time/OffsetDateTime.html")
+                                        .build())
                                 .type(com.asyncapi.v2.model.schema.Type.STRING)
                                 .examples(List.of("2022-03-10T12:15:50-04:00"))
                                 .build(),
@@ -205,8 +213,39 @@ public class AsyncApiAnnotationScanner {
                                 .format("uuid")
                                 .pattern("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}")
                                 .type(com.asyncapi.v2.model.schema.Type.STRING)
-                                .build()))
+                                .build(),
+                        "LocalTime", Schema.builder()
+                                .format("local-time")
+                                .type(com.asyncapi.v2.model.schema.Type.STRING)
+                                .externalDocs(ExternalDocumentation.builder()
+                                        .description("ISO-8601 representation of a extended local time")
+                                        .url("https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html#ISO_LOCAL_TIME")
+                                        .build())
+                                .examples(List.of("13:45.30.123456789"))
+                                .build(),
+                        "Duration", Schema.builder()
+                                .format("duration")
+                                .type(com.asyncapi.v2.model.schema.Type.STRING)
+                                .externalDocs(ExternalDocumentation.builder()
+                                        .description("ISO-8601 representation of a duration")
+                                        .url("https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#toString--")
+                                        .build())
+                                .examples(List.of("P1D"))
+                                .build(),
+                        "DayOfWeek", Schema.builder()
+                                .type(com.asyncapi.v2.model.schema.Type.STRING)
+                                .enumValue(List.of(
+                                        "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"))
+                                .build())))
                 .build();
+    }
+
+    boolean isGlobalDefinedSchema(Type aType) {
+        DotName typeName = aType.name();
+        return Stream
+                .of(OffsetDateTime.class, UUID.class, LocalTime.class, Duration.class, DayOfWeek.class)
+                .map(DotName::createSimple)
+                .anyMatch(typeName::equals);
     }
 
     Message getMessage(Type aMessageType) {
@@ -236,14 +275,10 @@ public class AsyncApiAnnotationScanner {
         ClassInfo classInfo = index.getClassByName(aType.name());
         if (aType.name().packagePrefix().startsWith("java.lang")) {
             getJavaLangPackageSchema(aType, aSchemaBuilder);
-
+        } else if (isGlobalDefinedSchema(aType)) {
+            aSchemaBuilder.ref("#/components/schemas/" + aType.name().withoutPackagePrefix());
         } else if (classInfo != null && classInfo.isEnum()) {
             aSchemaBuilder.enumValue(classInfo.enumConstants().stream().map(FieldInfo::name).map(Object.class::cast).toList());
-
-        } else if (aType.name().equals(DotName.createSimple(OffsetDateTime.class))) {
-            aSchemaBuilder.ref("#/components/schemas/OffsetDateTime");
-        } else if (aType.name().equals(DotName.createSimple(UUID.class))) {
-            aSchemaBuilder.ref("#/components/schemas/UUID");
         } else if (VISITED_TYPES.contains(aType)) {
             LOGGER.fine("getClassSchema() Already visited type " + aType + ". Stopping recursion!");
         } else {
