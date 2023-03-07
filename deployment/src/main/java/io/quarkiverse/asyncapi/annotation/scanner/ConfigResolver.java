@@ -72,10 +72,10 @@ public class ConfigResolver {
             return null;
         }
         return config.servers.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> toOpenApiServer(e.getValue())));
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> toAsyncApiServer(e.getValue())));
     }
 
-    Server toOpenApiServer(io.quarkiverse.asyncapi.annotation.scanner.config.Server aConfigServer) {
+    Server toAsyncApiServer(io.quarkiverse.asyncapi.annotation.scanner.config.Server aConfigServer) {
         return Server.builder()
                 //TODO
                 .protocol(aConfigServer.protocol)

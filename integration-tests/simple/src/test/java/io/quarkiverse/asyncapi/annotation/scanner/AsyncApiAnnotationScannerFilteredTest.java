@@ -5,126 +5,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.DescribeClusterResult;
-import org.apache.kafka.clients.admin.DescribeConfigsResult;
-import org.apache.kafka.clients.admin.DescribeTopicsResult;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.config.ConfigResource;
 import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.kafka.InjectKafkaCompanion;
-import io.quarkus.test.kafka.KafkaCompanionResource;
-import io.smallrye.reactive.messaging.kafka.companion.KafkaCompanion;
 
 @QuarkusTest
-@QuarkusTestResource(KafkaCompanionResource.class)
 public class AsyncApiAnnotationScannerFilteredTest {
 
     @Inject
     Config config;
 
-    @InjectKafkaCompanion
-    KafkaCompanion companion;
-
-    //Config(entries=[ConfigEntry(name=compression.type, value=producer, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=STRING, documentation=null),
-    //
-    //ConfigEntry(name=leader.replication.throttled.replicas, value=, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LIST, documentation=null),
-    //
-    //ConfigEntry(name=message.downconversion.enable, value=true, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=BOOLEAN, documentation=null),
-    //
-    //ConfigEntry(name=min.insync.replicas, value=1, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=INT, documentation=null),
-    //
-    //ConfigEntry(name=segment.jitter.ms, value=0, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LONG, documentation=null),
-    //
-    //ConfigEntry(name=cleanup.policy, value=delete, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LIST, documentation=null),
-    //
-    //ConfigEntry(name=flush.ms, value=9223372036854775807, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LONG, documentation=null),
-    //
-    //ConfigEntry(name=follower.replication.throttled.replicas, value=, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LIST, documentation=null),
-    //
-    //ConfigEntry(name=segment.bytes, value=1073741824, source=STATIC_BROKER_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=INT, documentation=null),
-    //
-    //ConfigEntry(name=retention.ms, value=604800000, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LONG, documentation=null),
-    //
-    //ConfigEntry(name=flush.messages, value=9223372036854775807, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LONG, documentation=null),
-    //
-    //ConfigEntry(name=message.format.version, value=3.0-IV1, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=STRING, documentation=null),
-    //
-    //ConfigEntry(name=max.compaction.lag.ms, value=9223372036854775807, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LONG, documentation=null),
-    //
-    //ConfigEntry(name=file.delete.delay.ms, value=60000, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LONG, documentation=null),
-    //
-    //ConfigEntry(name=max.message.bytes, value=1048588, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=INT, documentation=null),
-    //
-    //ConfigEntry(name=min.compaction.lag.ms, value=0, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LONG, documentation=null),
-    //
-    //ConfigEntry(name=message.timestamp.type, value=CreateTime, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=STRING, documentation=null),
-    //
-    //ConfigEntry(name=preallocate, value=false, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=BOOLEAN, documentation=null),
-    //
-    //ConfigEntry(name=min.cleanable.dirty.ratio, value=0.5, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=DOUBLE, documentation=null),
-    //
-    //ConfigEntry(name=index.interval.bytes, value=4096, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=INT, documentation=null),
-    //
-    //ConfigEntry(name=unclean.leader.election.enable, value=false, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=BOOLEAN, documentation=null),
-    //
-    //ConfigEntry(name=retention.bytes, value=-1, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LONG, documentation=null),
-    //
-    //ConfigEntry(name=delete.retention.ms, value=86400000, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LONG, documentation=null),
-    //
-    //ConfigEntry(name=segment.ms, value=604800000, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LONG, documentation=null),
-    //
-    //ConfigEntry(name=message.timestamp.difference.max.ms, value=9223372036854775807, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=LONG, documentation=null),
-    //
-    //ConfigEntry(name=segment.index.bytes, value=10485760, source=DEFAULT_CONFIG, isSensitive=false, isReadOnly=false, synonyms=[], type=INT, documentation=null)])
-
     @Test
     void shouldScanAndFilterEmitterAnnotations_CheckTransferChannel1() throws Exception {
         //given
-        companion.topics().create("transfer-topic", 3);
-        companion.produceStrings().usingGenerator(i -> new ProducerRecord<>("transfer-topic", "testMessage"));
-
-        Map<String, Object> properties = Map.of("bootstrap.servers", config.getValue("kafka.bootstrap.servers", String.class));
-        try (AdminClient client = AdminClient.create(properties)) {
-            DescribeClusterResult describeCluster = client.describeCluster();
-            Set<String> topicNames = client.listTopics().names().get();
-            DescribeTopicsResult describeTopics = client.describeTopics(topicNames);
-            //            Collection<TopicListing> get = client.listTopics().listings().get();
-            //            TopicListing
-            DescribeConfigsResult describeConfigs = client
-                    .describeConfigs(List.of(new ConfigResource(ConfigResource.Type.TOPIC, "transfer-topic")));
-            List<org.apache.kafka.clients.admin.Config> toList = describeConfigs.values().entrySet().stream()
-                    .map(e -> {
-                        try {
-                            return e.getValue().get();
-                        } catch (Exception any) {
-                            return null;
-                        }
-                    })
-                    .filter(Objects::nonNull)
-                    .peek(System.out::println)
-                    .toList();
-            System.out.println(
-                    "io.quarkiverse.asyncapi.annotation.scanner.AsyncApiAnnotationScannerFilteredTest.shouldScanAndFilterEmitterAnnotations_CheckTransferChannel1()");
-        }
-
         String yaml = Files.readAllLines(Path.of(FOLDER + "/asyncApi.yaml")).stream().collect(Collectors.joining("\n"));
-
         assertThat(yaml).isNotNull();
         System.out.println(yaml);
         JsonNode asyncAPI = ObjectMapperFactory.yaml().readTree(yaml);

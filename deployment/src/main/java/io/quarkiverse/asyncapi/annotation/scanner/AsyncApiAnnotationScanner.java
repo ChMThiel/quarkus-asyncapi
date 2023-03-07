@@ -236,15 +236,34 @@ public class AsyncApiAnnotationScanner {
                                 .type(com.asyncapi.v2.model.schema.Type.STRING)
                                 .enumValue(List.of(
                                         "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"))
+                                .build(),
+                        "Scale", Schema.builder()
+                                .type(com.asyncapi.v2.model.schema.Type.STRING)
+                                .enumValue(List.of("ABSOLUTE", "RELATIVE"))
+                                .build(),
+                        "Quantity", Schema.builder()
+                                .required(List.of("value", "unit"))
+                                .type(com.asyncapi.v2.model.schema.Type.OBJECT)
+                                .properties(new TreeMap<>(Map.of(
+                                        "scale", Schema.builder()
+                                                .ref("#/components/schemas/Scale")
+                                                .defaultValue("ABSOLUTE").build(),
+                                        "unit", Schema.builder()
+                                                .description("Symbol of unit.")
+                                                .type(com.asyncapi.v2.model.schema.Type.STRING).build(),
+                                        "value", Schema.builder()
+                                                .type(com.asyncapi.v2.model.schema.Type.NUMBER).build())))
                                 .build())))
                 .build();
     }
 
     boolean isGlobalDefinedSchema(Type aType) {
-        DotName typeName = aType.name();
-        return Stream
+        Stream<DotName> classpathClasses = Stream
                 .of(OffsetDateTime.class, UUID.class, LocalTime.class, Duration.class, DayOfWeek.class)
-                .map(DotName::createSimple)
+                .map(DotName::createSimple);
+        Stream<DotName> nonClassPathClasses = Stream.of(DotName.createSimple("javax.measure.Quantity"));
+        DotName typeName = aType.name();
+        return Stream.concat(classpathClasses, nonClassPathClasses)
                 .anyMatch(typeName::equals);
     }
 
