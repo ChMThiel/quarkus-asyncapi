@@ -43,6 +43,8 @@ import com.asyncapi.v2.model.schema.Schema;
 import io.quarkiverse.asyncapi.annotation.scanner.config.Channel;
 import io.quarkiverse.asyncapi.annotation.scanner.kafka.binding.KafkaChannelBinding;
 import io.quarkiverse.asyncapi.annotation.scanner.kafka.binding.KafkaResolver;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @since 09.02.2023
@@ -51,6 +53,7 @@ import io.quarkiverse.asyncapi.annotation.scanner.kafka.binding.KafkaResolver;
 public class AsyncApiAnnotationScanner {
 
     public static final String CONFIG_PREFIX = "io.quarkiverse.asyncapi";
+    static final Logger LOGGER = Logger.getLogger(AsyncApiAnnotationScanner.class.getName());
 
     final IndexView index;
     final ConfigResolver configResolver;
@@ -176,7 +179,7 @@ public class AsyncApiAnnotationScanner {
                 } else {
                     ParameterizedType type = null;
                     for (int i = types.length - 1; i >= 0; i--) {
-                        type = ParameterizedType.create(types[i].name(), type != null ? new Type[] { type } : null, null);
+                        type = ParameterizedType.create(types[i].name(), type != null ? new Type[]{type} : null, null);
                     }
                     messageType = type;
                 }
@@ -238,14 +241,11 @@ public class AsyncApiAnnotationScanner {
             aSchemaBuilder.enumValue(classInfo.enumConstants().stream().map(FieldInfo::name).map(Object.class::cast).toList());
 
         } else if (aType.name().equals(DotName.createSimple(OffsetDateTime.class))) {
-            aSchemaBuilder.ref(
-                    "#/components/schemas/OffsetDateTime");
+            aSchemaBuilder.ref("#/components/schemas/OffsetDateTime");
         } else if (aType.name().equals(DotName.createSimple(UUID.class))) {
-            aSchemaBuilder.ref(
-                    "#/components/schemas/UUID");
+            aSchemaBuilder.ref("#/components/schemas/UUID");
         } else if (VISITED_TYPES.contains(aType)) {
-            System.out.println("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiAnnotationScanner.getClassSchema() "
-                    + "Already visited type " + aType + ". Stopping recursion!");
+            LOGGER.fine("getClassSchema() Already visited type " + aType + ". Stopping recursion!");
         } else {
             VISITED_TYPES.add(aType);
             aSchemaBuilder.type(com.asyncapi.v2.model.schema.Type.OBJECT);
@@ -265,12 +265,9 @@ public class AsyncApiAnnotationScanner {
                 aSchemaBuilder.properties(properties);
             } else {
                 //class is not in jandex...try to get the class by reflection
-                System.out.println("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiAnnotationScanner.getClassSchema() "
-                        + "Loading raw type " + aType);
+                LOGGER.fine("getClassSchema() Loading raw type " + aType);
                 Class<?> rawClass = JandexReflection.loadRawType(aType);
-
-                if (Collection.class
-                        .isAssignableFrom(rawClass)) {
+                if (Collection.class.isAssignableFrom(rawClass)) {
                     Type collectionType = aType.kind().equals(Type.Kind.PARAMETERIZED_TYPE)
                             ? aTypeVariableMap.getOrDefault(aType.asParameterizedType().arguments().get(0).toString(),
                                     aType.asParameterizedType().arguments().get(0))

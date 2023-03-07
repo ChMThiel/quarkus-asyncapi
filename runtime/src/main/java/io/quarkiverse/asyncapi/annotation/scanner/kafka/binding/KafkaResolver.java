@@ -41,7 +41,7 @@ public class KafkaResolver {
                         .replicas(partitionInfos.get(0).replicas().size())
                         .topicConfiguration(getTopicConfiguration(client, aTopic));
             } catch (InterruptedException | ExecutionException ex) {
-                Logger.getLogger(KafkaResolver.class.getName()).log(Level.SEVERE, "kafka not available", ex);
+                Logger.getLogger(KafkaResolver.class.getName()).log(Level.WARNING, "kafka not available");
             }
         } else {
             Logger.getLogger(KafkaResolver.class.getName()).log(Level.WARNING, "No kafka.bootstrap.server configured");
