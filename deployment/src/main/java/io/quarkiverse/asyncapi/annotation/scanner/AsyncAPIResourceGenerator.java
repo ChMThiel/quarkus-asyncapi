@@ -20,6 +20,7 @@ import io.quarkus.vertx.http.deployment.FilterBuildItem;
 import io.quarkus.vertx.http.deployment.NonApplicationRootPathBuildItem;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
 import io.quarkus.vertx.http.deployment.devmode.NotFoundPageDisplayableEndpointBuildItem;
+import io.quarkus.vertx.http.runtime.filters.Filter;
 import io.vertx.ext.web.Route;
 
 public class AsyncAPIResourceGenerator {
@@ -49,16 +50,16 @@ public class AsyncAPIResourceGenerator {
                 .getValue("quarkus.http.root-path", String.class).concat("/asyncapi");
         AsyncApiHandler handler = new AsyncApiHandler();
         Consumer<Route> corsFilter = null;
-        //        // Add CORS filter if the path is not attached to main root
-        //        // as 'http-vertx' only adds CORS filter to http route path
-        //        if (!nonApplicationRootPathBuildItem.isAttachedToMainRouter()) {
-        //            for (FilterBuildItem filterBuildItem : filterBuildItems) {
-        //                if (filterBuildItem.getPriority() == FilterBuildItem.CORS) {
-        //                    corsFilter = recorder.corsFilter(filterBuildItem.toFilter());
-        //                    break;
-        //                }
-        //            }
-        //        }
+        // Add CORS filter if the path is not attached to main root
+        // as 'http-vertx' only adds CORS filter to http route path
+        if (!nonApplicationRootPathBuildItem.isAttachedToMainRouter()) {
+            for (FilterBuildItem filterBuildItem : filterBuildItems) {
+                if (filterBuildItem.getPriority() == FilterBuildItem.CORS) {
+                    corsFilter = corsFilter(filterBuildItem.toFilter());
+                    break;
+                }
+            }
+        }
         routes.produce(nonApplicationRootPathBuildItem.routeBuilder()
                 .routeFunction(path, corsFilter)
                 .routeConfigKey("quarkus.asyncapi.path")
@@ -83,5 +84,15 @@ public class AsyncAPIResourceGenerator {
                 .routeFunction(path + ".html", corsFilter)
                 .handler(handler)
                 .build());
+    }
+
+    Consumer<Route> corsFilter(Filter filter) {
+        //cors always enabled
+        if (filter.getHandler() != null) {
+            return (Route route) -> {
+                route.order(-1 * filter.getPriority()).handler(filter.getHandler());
+            };
+        }
+        return null;
     }
 }
