@@ -5,24 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-
-import org.eclipse.microprofile.config.Config;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-@Disabled
 public class AsyncApiAnnotationScannerFilteredTest {
-
-    @Inject
-    Config config;
 
     @Test
     void shouldScanAndFilterEmitterAnnotations_CheckTransferChannel1() throws Exception {
