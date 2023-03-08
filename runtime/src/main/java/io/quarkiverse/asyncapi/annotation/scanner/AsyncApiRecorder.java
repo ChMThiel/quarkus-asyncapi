@@ -39,7 +39,7 @@ public class AsyncApiRecorder {
         try {
             AsyncAPI filteredAPI = filter(aAsyncAPI, aConfig);
             store(ObjectMapperFactory.yaml().writeValueAsString(filteredAPI), ASYNC_API_YAML);
-            store(json().writeValueAsString(filteredAPI), ASYNC_API_JSON);
+            store(ObjectMapperFactory.json().writeValueAsString(filteredAPI), ASYNC_API_JSON);
         } catch (JsonProcessingException e) {
             LOGGER.throwing("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiRecorder", "scanAsyncAPIs", e);
         }
