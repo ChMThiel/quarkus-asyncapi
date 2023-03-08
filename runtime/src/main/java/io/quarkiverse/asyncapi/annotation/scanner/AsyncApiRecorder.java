@@ -1,9 +1,12 @@
 package io.quarkiverse.asyncapi.annotation.scanner;
 
+import static io.quarkiverse.asyncapi.annotation.scanner.ObjectMapperFactory.json;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.AbstractMap;
 import java.util.Map;
@@ -28,29 +31,25 @@ import io.quarkus.runtime.annotations.Recorder;
 @ApplicationScoped
 public class AsyncApiRecorder {
 
-    static final String FOLDER = "target/classes/META-INF/resources";
     private static final Logger LOGGER = Logger.getLogger(AsyncApiRecorder.class.getName());
+
+    public static final String ASYNC_API_JSON = "asyncapi.json";
+    public static final String ASYNC_API_YAML = "asyncapi.yaml";
 
     public void setAsyncAPI(AsyncAPI aAsyncAPI, AsyncApiRuntimeConfig aConfig) {
         try {
             AsyncAPI filteredAPI = filter(aAsyncAPI, aConfig);
-            store(ObjectMapperFactory.yaml().writeValueAsString(filteredAPI), "yaml");
-            store(ObjectMapperFactory.json().writeValueAsString(filteredAPI), "json");
+            store(ObjectMapperFactory.yaml().writeValueAsString(filteredAPI), ASYNC_API_YAML);
+            store(json().writeValueAsString(filteredAPI), ASYNC_API_JSON);
         } catch (JsonProcessingException e) {
             LOGGER.throwing("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiRecorder", "scanAsyncAPIs", e);
         }
     }
 
-    void store(String aContent, String aFileSuffix) {
+    void store(String aContent, String aFileName) {
         try {
-            Path dir = Path.of(FOLDER);
-            if (!Files.exists(dir)) {
-                Files.createDirectories(dir);
-            }
-            Path file = Path.of(FOLDER + "/asyncApi." + aFileSuffix);
-            if (!Files.exists(file)) {
-                Files.createFile(file);
-            }
+            Path file = Files.createFile(Paths.get(System.getProperty("java.io.tmpdir"), aFileName));
+            LOGGER.info("AsycnApiRecorder.store " + aFileName + " to " + file);
             Files.writeString(file, aContent, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             LOGGER.throwing("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiRecorder", "store", e);

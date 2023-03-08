@@ -1,12 +1,11 @@
 package io.quarkiverse.asyncapi.annotation.scanner;
 
-import static io.quarkiverse.asyncapi.annotation.scanner.AsyncApiRecorder.FOLDER;
-
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 
@@ -20,9 +19,6 @@ import io.vertx.ext.web.RoutingContext;
  * @since 10.02.2023
  */
 public class AsyncApiHandler implements Handler<RoutingContext> {
-
-    public AsyncApiHandler() {
-    }
 
     @Override
     public void handle(RoutingContext aRoutingContext) {
@@ -41,13 +37,21 @@ public class AsyncApiHandler implements Handler<RoutingContext> {
                     throw new AssertionError();
             };
             resp.end(Buffer.buffer(output)); // see http://localhost:8080/asyncapi
-        } catch (IOException iOException) {
+        } catch (IOException | URISyntaxException e) {
             resp.end(Buffer.buffer("Unable to read file"));
         }
     }
 
-    String read(String aType) throws IOException {
-        return Files.readAllLines(Path.of(FOLDER + "/asyncApi." + aType)).stream().collect(Collectors.joining("\n"));
+    String read(String aType) throws URISyntaxException, IOException {
+        Path path = switch (aType) {
+            case "yaml" ->
+                Paths.get(System.getProperty("java.io.tmpdir"), AsyncApiRecorder.ASYNC_API_YAML);
+            case "json" ->
+                Paths.get(System.getProperty("java.io.tmpdir"), AsyncApiRecorder.ASYNC_API_JSON);
+            default ->
+                throw new AssertionError();
+        };
+        return Files.readString(path);
     }
 
     String getHtml(RoutingContext aRoutingContext) {
@@ -69,13 +73,13 @@ public class AsyncApiHandler implements Handler<RoutingContext> {
                   <body>
                     <asyncapi-component
                       cssImportPath="https://unpkg.com/@asyncapi/react-component@%s/styles/default.css"
-                      schemaUrl="http://%s%s/asyncapi.yaml"
+                      schemaUrl="%s/asyncapi.yaml"
                     >
                     </asyncapi-component>
                   </body>
                 </html>
                 """
-                .formatted(version, version, version, aRoutingContext.request().host(), rootPath);
+                .formatted(version, version, version, rootPath);
     }
 
     Format getFormat(RoutingContext event) {
