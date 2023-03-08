@@ -7,7 +7,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
@@ -48,9 +47,9 @@ public class AsyncApiRecorder {
 
     void store(String aContent, String aFileName) {
         try {
-            Path file = Files.createFile(Paths.get(System.getProperty("java.io.tmpdir"), aFileName));
-            LOGGER.info("AsycnApiRecorder.store " + aFileName + " to " + file);
-            Files.writeString(file, aContent, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            Path path = Paths.get(System.getProperty("java.io.tmpdir"), aFileName);
+            LOGGER.info("AsycnApiRecorder.store to " + path);
+            Files.writeString(path, aContent);
         } catch (IOException e) {
             LOGGER.throwing("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiRecorder", "store", e);
         }
