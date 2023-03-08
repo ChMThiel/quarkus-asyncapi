@@ -26,6 +26,8 @@ import org.eclipse.microprofile.config.ConfigProvider;
  */
 public class KafkaResolver {
 
+    private static final Logger LOGGER = Logger.getLogger(KafkaResolver.class.getName());
+
     public KafkaChannelBinding getKafkaChannelBindings(String aTopic) {
         KafkaChannelBinding.KafkaChannelBindingBuilder builder = KafkaChannelBinding.builder()
                 .topic(aTopic);
@@ -41,12 +43,10 @@ public class KafkaResolver {
                         .replicas(partitionInfos.get(0).replicas().size())
                         .topicConfiguration(getTopicConfiguration(client, aTopic));
             } catch (InterruptedException | ExecutionException ex) {
-                Logger.getLogger(KafkaResolver.class.getName()).log(
-                        Level.WARNING,
-                        "Unable to describe topic " + aTopic + ": " + ex.getMessage());
+                LOGGER.log(Level.WARNING, "Unable to describe topic " + aTopic);
             }
         } else {
-            Logger.getLogger(KafkaResolver.class.getName()).log(Level.WARNING, "No kafka.bootstrap.server configured");
+            LOGGER.log(Level.WARNING, "No kafka.bootstrap.server configured");
         }
         return builder.build();
     }
