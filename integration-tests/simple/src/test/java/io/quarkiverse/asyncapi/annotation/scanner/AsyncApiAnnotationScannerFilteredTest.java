@@ -3,7 +3,8 @@ package io.quarkiverse.asyncapi.annotation.scanner;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -26,8 +27,8 @@ public class AsyncApiAnnotationScannerFilteredTest {
     @Test
     void shouldScanAndFilterEmitterAnnotations_CheckTransferChannel1() throws Exception {
         //given
-        String yaml = Files
-                .readString(Paths.get(getClass().getClassLoader().getResource("META-INF/resources/asyncApi.yaml").toURI()));
+        String yaml = Files.readAllLines(Path.of(System.getProperty("java.io.tmpdir"), "asyncApi.yaml")).stream()
+                .collect(Collectors.joining("\n"));
         assertThat(yaml).isNotNull();
         System.out.println(yaml);
         JsonNode asyncAPI = ObjectMapperFactory.yaml().readTree(yaml);
@@ -166,8 +167,8 @@ public class AsyncApiAnnotationScannerFilteredTest {
     @Test
     void shouldScanAndFilterEmitterAnnotations_CheckIncomingChannelPart() throws Exception {
         //given
-        String yaml = Files
-                .readString(Paths.get(getClass().getClassLoader().getResource("META-INF/resources/asyncApi.yaml").toURI()));
+        String yaml = Files.readAllLines(Path.of(System.getProperty("java.io.tmpdir"), "asyncApi.yaml")).stream()
+                .collect(Collectors.joining("\n"));
         assertThat(yaml).isNotNull();
         System.out.println(yaml);
         JsonNode asyncAPI = ObjectMapperFactory.yaml().readTree(yaml);
@@ -264,8 +265,8 @@ public class AsyncApiAnnotationScannerFilteredTest {
     @Test
     void shouldScanAndFilterEmitterAnnotations_CheckIncomingChannelString() throws Exception {
         //given
-        String yaml = Files
-                .readString(Paths.get(getClass().getClassLoader().getResource("META-INF/resources/asyncApi.yaml").toURI()));
+        String yaml = Files.readAllLines(Path.of(System.getProperty("java.io.tmpdir"), "asyncApi.yaml")).stream()
+                .collect(Collectors.joining("\n"));
         assertThat(yaml).isNotNull();
         System.out.println(yaml);
         JsonNode asyncAPI = ObjectMapperFactory.yaml().readTree(yaml);
@@ -363,8 +364,8 @@ public class AsyncApiAnnotationScannerFilteredTest {
     @Test
     void shouldScanAndFilterEmitterAnnotations_CheckOutgoingChannelString() throws Exception {
         //given
-        String yaml = Files
-                .readString(Paths.get(getClass().getClassLoader().getResource("META-INF/resources/asyncApi.yaml").toURI()));
+        String yaml = Files.readAllLines(Path.of(System.getProperty("java.io.tmpdir"), "asyncApi.yaml")).stream()
+                .collect(Collectors.joining("\n"));
         assertThat(yaml).isNotNull();
         System.out.println(yaml);
         JsonNode asyncAPI = ObjectMapperFactory.yaml().readTree(yaml);

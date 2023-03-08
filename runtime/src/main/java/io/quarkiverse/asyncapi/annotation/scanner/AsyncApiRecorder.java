@@ -33,8 +33,8 @@ public class AsyncApiRecorder {
 
     private static final Logger LOGGER = Logger.getLogger(AsyncApiRecorder.class.getName());
 
-    public static final String ASYNC_API_JSON = "asyncapi.json";
-    public static final String ASYNC_API_YAML = "asyncapi.yaml";
+    public static final String ASYNC_API_JSON = "asyncApi.json";
+    public static final String ASYNC_API_YAML = "asyncApi.yaml";
 
     public void setAsyncAPI(AsyncAPI aAsyncAPI, AsyncApiRuntimeConfig aConfig) {
         try {

@@ -3,7 +3,8 @@ package io.quarkiverse.asyncapi.annotation.scanner;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
@@ -20,8 +21,8 @@ public class AsyncApiAnnotationScannerUnFilteredTest {
     @Test
     void shouldScanAndFilterEmitterAnnotations() throws Exception {
         //given
-        String yaml = Files
-                .readString(Paths.get(getClass().getClassLoader().getResource("META-INF/resources/asyncApi.yaml").toURI()));
+        String yaml = Files.readAllLines(Path.of(System.getProperty("java.io.tmpdir"), "asyncApi.yaml")).stream()
+                .collect(Collectors.joining("\n"));
         assertThat(yaml).isNotNull();
         JsonNode asyncAPI = ObjectMapperFactory.yaml().readTree(yaml);
         //when
