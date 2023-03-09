@@ -96,7 +96,7 @@ public class AsyncApiRecorder {
         String server = "[" + aAsyncAPI.getInfo().getTitle() + "\\n" + aAsyncAPI.getInfo().getVersion() + "]";
         String start = """
                 @startuml
-                'needed on servers without graphwiz...but then the 'left to right direction' does not work ;(
+                'needed on servers without graphviz...but then the 'left to right direction' does not work ;(
                 !pragma layout smetana
                 left to right direction
                 skinparam pathHoverColor Blue
