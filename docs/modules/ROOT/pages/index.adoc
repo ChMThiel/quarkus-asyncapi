@@ -2,7 +2,15 @@
 
 include::./includes/attributes.adoc[]
 
-TIP: Describe what the extension does here.
+This extension creates an AsyncApi-document, describing data your server publishes/subscribes to/from Kafka-topics.
+
+It does this by
+
+* scanning for annotations `@Channel, @Outgoing and @Incoming` in your project,
+* reading topics and descriptions from microprofile-configuration and
+* reading data from running kafka
+
+The result can be viewed as html or svg or downloaded as yaml, json or plant-uml (localhost://[quarkus.http.root-path]/asyncapi.[html|svg|yaml|json|puml]).
 
 == Installation
 
@@ -22,7 +30,6 @@ For instance, with Maven, add the following dependency to your POM file:
 [[extension-configuration-reference]]
 == Extension Configuration Reference
 
-//TIP: Remove this section if you don't have Quarkus configuration properties in your extension.
 [TIP]
 For more information about the extension configuration please refer to the <<configuration-reference, Configuration Reference>>.
 
