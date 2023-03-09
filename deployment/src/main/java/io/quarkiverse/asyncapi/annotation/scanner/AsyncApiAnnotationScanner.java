@@ -63,27 +63,38 @@ public class AsyncApiAnnotationScanner {
 
     static Set<Type> VISITED_TYPES = new HashSet<>();
 
+    KafkaResolver kafkaResolver;
+
     public AsyncApiAnnotationScanner(IndexView aIndex, ConfigResolver aConfigResolver) {
         index = aIndex;
         configResolver = aConfigResolver;
     }
 
     public Map<String, ChannelItem> getChannels() {
-        Stream<AbstractMap.SimpleEntry<String, ChannelItem>> annotatedChannels = index
-                .getAnnotations("org.eclipse.microprofile.reactive.messaging.Channel")
-                .stream()
-                .map(annotation -> getChannel(annotation, ResolveType.CHANNEL));
-        Stream<AbstractMap.SimpleEntry<String, ChannelItem>> annotatedIncomings = index
-                .getAnnotations("org.eclipse.microprofile.reactive.messaging.Incoming")
-                .stream()
-                .map(annotation -> getChannel(annotation, ResolveType.INCOMING));
-        Stream<AbstractMap.SimpleEntry<String, ChannelItem>> annotatedOutgoings = index
-                .getAnnotations("org.eclipse.microprofile.reactive.messaging.Outgoing")
-                .stream()
-                .map(annotation -> getChannel(annotation, ResolveType.OUTGOING));
-        return Stream.concat(Stream.concat(annotatedChannels, annotatedIncomings), annotatedOutgoings)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, TreeMap::new));
+        TreeMap<String, ChannelItem> result;
+        try {
+            Stream<AbstractMap.SimpleEntry<String, ChannelItem>> annotatedChannels = index
+                    .getAnnotations("org.eclipse.microprofile.reactive.messaging.Channel")
+                    .stream()
+                    .map(annotation -> getChannel(annotation, ResolveType.CHANNEL));
+            Stream<AbstractMap.SimpleEntry<String, ChannelItem>> annotatedIncomings = index
+                    .getAnnotations("org.eclipse.microprofile.reactive.messaging.Incoming")
+                    .stream()
+                    .map(annotation -> getChannel(annotation, ResolveType.INCOMING));
+            Stream<AbstractMap.SimpleEntry<String, ChannelItem>> annotatedOutgoings = index
+                    .getAnnotations("org.eclipse.microprofile.reactive.messaging.Outgoing")
+                    .stream()
+                    .map(annotation -> getChannel(annotation, ResolveType.OUTGOING));
+            result = Stream
+                    .concat(Stream.concat(annotatedChannels, annotatedIncomings), annotatedOutgoings)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, TreeMap::new));
+        } finally {
+            if (kafkaResolver != null) {
+                kafkaResolver.close();
+            }
+        }
+        return result;
     }
 
     AbstractMap.SimpleEntry<String, ChannelItem> getChannel(AnnotationInstance aAnnotationInstance, ResolveType aResolveType) {
@@ -92,7 +103,10 @@ public class AsyncApiAnnotationScanner {
         String channelName = aAnnotationInstance.value().asString();
         if (channelData.operationId != null && configResolver.isSmallRyeKafkaTopic(channelData.isEmitter, channelName)) {
             String topic = configResolver.getTopic(channelData.isEmitter, channelName);
-            KafkaChannelBinding channelBinding = new KafkaResolver().getKafkaChannelBindings(topic);
+            if (kafkaResolver == null) {
+                kafkaResolver = new KafkaResolver();
+            }
+            KafkaChannelBinding channelBinding = kafkaResolver.getKafkaChannelBindings(topic);
             ChannelItem.ChannelItemBuilder channelBuilder = ChannelItem.builder()
                     .bindings(Map.of("kafka", channelBinding));
             Operation operation = Operation.builder()

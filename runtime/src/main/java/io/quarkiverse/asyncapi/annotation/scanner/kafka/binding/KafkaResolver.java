@@ -17,6 +17,7 @@ import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.DescribeTopicsOptions;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
+import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.config.ConfigResource;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -28,6 +29,8 @@ public class KafkaResolver {
 
     private static final Logger LOGGER = Logger.getLogger(KafkaResolver.class.getName());
 
+    private AdminClient adminClient;
+
     public KafkaChannelBinding getKafkaChannelBindings(String aTopic) {
         KafkaChannelBinding.KafkaChannelBindingBuilder builder = KafkaChannelBinding.builder()
                 .topic(aTopic);
@@ -35,15 +38,20 @@ public class KafkaResolver {
                 .getOptionalValue("kafka.bootstrap.servers", String.class);
         if (bootStrapServers.isPresent()) {
             Map<String, Object> properties = Map.of("bootstrap.servers", bootStrapServers.get());
-            try (AdminClient client = AdminClient.create(properties)) {
-                DescribeTopicsResult topicDescription = client.describeTopics(
-                        Set.of(aTopic), new DescribeTopicsOptions().timeoutMs(1000));
-                List<TopicPartitionInfo> partitionInfos = topicDescription.topicNameValues().get(aTopic).get().partitions();
-                builder.partitions(partitionInfos.size())
-                        .replicas(partitionInfos.get(0).replicas().size())
-                        .topicConfiguration(getTopicConfiguration(client, aTopic));
+            if (adminClient == null) {
+                adminClient = AdminClient.create(properties);
+            }
+            try {
+                if (isTopicExists(adminClient, aTopic)) {
+                    DescribeTopicsResult topicDescription = adminClient.describeTopics(
+                            Set.of(aTopic), new DescribeTopicsOptions().timeoutMs(100));
+                    List<TopicPartitionInfo> partitionInfos = topicDescription.topicNameValues().get(aTopic).get().partitions();
+                    builder.partitions(partitionInfos.size())
+                            .replicas(partitionInfos.get(0).replicas().size())
+                            .topicConfiguration(getTopicConfiguration(adminClient, aTopic));
+                }
             } catch (InterruptedException | ExecutionException ex) {
-                LOGGER.log(Level.WARNING, "Unable to describe topic " + aTopic);
+                LOGGER.log(Level.WARNING, "Unable to describe topic {0}", aTopic);
             }
         } else {
             LOGGER.log(Level.WARNING, "No kafka.bootstrap.server configured");
@@ -75,4 +83,13 @@ public class KafkaResolver {
                 .build();
     }
 
+    private boolean isTopicExists(AdminClient admin, String topicName) throws InterruptedException, ExecutionException {
+        return admin.listTopics(new ListTopicsOptions().timeoutMs(100)).names().get().contains(topicName);
+    }
+
+    public void close() {
+        if (adminClient != null) {
+            adminClient.close();
+        }
+    }
 }
