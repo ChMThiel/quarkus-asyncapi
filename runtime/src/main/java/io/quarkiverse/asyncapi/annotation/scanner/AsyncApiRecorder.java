@@ -94,16 +94,21 @@ public class AsyncApiRecorder {
 
     String toPlantUml(AsyncAPI aAsyncAPI) {
         String server = "[" + aAsyncAPI.getInfo().getTitle() + "\\n" + aAsyncAPI.getInfo().getVersion() + "]";
+        String start = """
+                @startuml
+                left to right direction
+                skinparam pathHoverColor Blue
+                """;
         return aAsyncAPI.getChannels().values().stream()
                 .map(channelItem -> toPlantUmlArrow(server, channelItem))
                 .distinct()//ignore multiple publishers/subscribers
-                .collect(Collectors.joining("\n", "@startuml\n", "\n@enduml"));
+                .collect(Collectors.joining("\n", start, "\n@enduml"));
     }
 
     String toPlantUmlArrow(String aServer, ChannelItem aChannelItem) {
         String arrow = aChannelItem.getPublish() != null
-                ? " -[#red]-> "
-                : " <-[#green]- ";
+                ? " -[#red,bold]-> "
+                : " <-[#green,bold]- ";
         KafkaChannelBinding kafkaChannelBinding = (KafkaChannelBinding) aChannelItem.getBindings().get("kafka");
         return aServer + arrow + "(" + kafkaChannelBinding.getTopic() + ")";
     }
