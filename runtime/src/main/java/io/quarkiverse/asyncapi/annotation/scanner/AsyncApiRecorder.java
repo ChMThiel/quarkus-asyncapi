@@ -1,9 +1,9 @@
 package io.quarkiverse.asyncapi.annotation.scanner;
 
-import static io.quarkiverse.asyncapi.annotation.scanner.ObjectMapperFactory.json;
-
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,7 +21,11 @@ import com.asyncapi.v2.model.channel.ChannelItem;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.quarkiverse.asyncapi.annotation.scanner.config.AsyncApiRuntimeConfig;
+import io.quarkiverse.asyncapi.annotation.scanner.kafka.binding.KafkaChannelBinding;
 import io.quarkus.runtime.annotations.Recorder;
+import net.sourceforge.plantuml.FileFormat;
+import net.sourceforge.plantuml.FileFormatOption;
+import net.sourceforge.plantuml.SourceStringReader;
 
 /**
  * @since 09.02.2023
@@ -34,12 +38,17 @@ public class AsyncApiRecorder {
 
     public static final String ASYNC_API_JSON = "asyncApi.json";
     public static final String ASYNC_API_YAML = "asyncApi.yaml";
+    public static final String ASYNC_API_PUML = "asyncApi.puml";
+    public static final String ASYNC_API_SVG = "asyncApi.svg";
 
     public void setAsyncAPI(AsyncAPI aAsyncAPI, AsyncApiRuntimeConfig aConfig) {
         try {
             AsyncAPI filteredAPI = filter(aAsyncAPI, aConfig);
             store(ObjectMapperFactory.yaml().writeValueAsString(filteredAPI), ASYNC_API_YAML);
             store(ObjectMapperFactory.json().writeValueAsString(filteredAPI), ASYNC_API_JSON);
+            String plantUml = toPlantUml(aAsyncAPI);
+            store(plantUml, ASYNC_API_PUML);
+            store(plantUmlToGrafik(plantUml, FileFormat.SVG), ASYNC_API_SVG);
         } catch (JsonProcessingException e) {
             LOGGER.throwing("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiRecorder", "scanAsyncAPIs", e);
         }
@@ -82,4 +91,34 @@ public class AsyncApiRecorder {
         }
         return null;
     }
+
+    String toPlantUml(AsyncAPI aAsyncAPI) {
+        String server = "[" + aAsyncAPI.getInfo().getTitle() + "\\n" + aAsyncAPI.getInfo().getVersion() + "]";
+        return aAsyncAPI.getChannels().values().stream()
+                .map(channelItem -> toPlantUmlArrow(server, channelItem))
+                .distinct()//ignore multiple publishers/subscribers
+                .collect(Collectors.joining("\n", "@startuml\n", "\n@enduml"));
+    }
+
+    String toPlantUmlArrow(String aServer, ChannelItem aChannelItem) {
+        String arrow = aChannelItem.getPublish() != null
+                ? " -[#red]-> "
+                : " <-[#green]- ";
+        KafkaChannelBinding kafkaChannelBinding = (KafkaChannelBinding) aChannelItem.getBindings().get("kafka");
+        return aServer + arrow + "(" + kafkaChannelBinding.getTopic() + ")";
+    }
+
+    String plantUmlToGrafik(String aPlantUml, FileFormat aFormat) {
+        try {
+            SourceStringReader reader = new SourceStringReader(aPlantUml);
+            final ByteArrayOutputStream os = new ByteArrayOutputStream();
+            String desc = reader.generateImage(os, new FileFormatOption(aFormat));
+            os.close();
+            return new String(os.toByteArray(), Charset.forName("UTF-8"));
+        } catch (IOException e) {
+            LOGGER.throwing("io.quarkiverse.asyncapi.annotation.scanner.AsyncApiRecorder", "plantUmlToSvg", e);
+            return "unable to generated SVG";
+        }
+    }
+
 }

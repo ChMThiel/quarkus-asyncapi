@@ -28,27 +28,17 @@ public class AsyncApiHandler implements Handler<RoutingContext> {
         Format format = getFormat(aRoutingContext);
         resp.headers().set("Content-Type", format.getMimeType() + ";charset=UTF-8");
         String output = switch (format) {
-            case YAML, JSON ->
-                read(format);
             case HTML ->
                 getHtml(aRoutingContext);
             default ->
-                throw new AssertionError();
+                read(format);
         };
         resp.end(Buffer.buffer(output)); // see http://localhost:8080/asyncapi
     }
 
     String read(Format aFormat) {
         try {
-            String fileName = switch (aFormat) {
-                case YAML ->
-                    AsyncApiRecorder.ASYNC_API_YAML;
-                case JSON ->
-                    AsyncApiRecorder.ASYNC_API_JSON;
-                default ->
-                    throw new AssertionError();
-            };
-            Path path = Paths.get(System.getProperty("java.io.tmpdir"), fileName);
+            Path path = Paths.get(System.getProperty("java.io.tmpdir"), aFormat.getFileName());
             return Files.readString(path);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "AsyncApiHandler.read() Unable to read file as " + aFormat, e);
@@ -81,7 +71,7 @@ public class AsyncApiHandler implements Handler<RoutingContext> {
                   </body>
                 </html>
                 """
-                .formatted(version, version, version, rootPath);
+                .formatted(version, version, version, rootPath, rootPath);
     }
 
     Format getFormat(RoutingContext aRoutingContext) {
@@ -94,6 +84,10 @@ public class AsyncApiHandler implements Handler<RoutingContext> {
             format = Format.YAML;
         } else if (path.endsWith(".html")) {
             format = Format.HTML;
+        } else if (path.endsWith(".puml")) {
+            format = Format.PUML;
+        } else if (path.endsWith(".svg")) {
+            format = Format.SVG;
         } else {
             // Content negotiation with Accept header
             String accept = aRoutingContext.request().headers().get("Accept");
@@ -108,18 +102,26 @@ public class AsyncApiHandler implements Handler<RoutingContext> {
     }
 
     enum Format {
-        JSON("application/json"),
-        YAML("application/yaml"),
-        HTML("text/html");
+        JSON("application/json", AsyncApiRecorder.ASYNC_API_JSON),
+        YAML("application/yaml", AsyncApiRecorder.ASYNC_API_YAML),
+        HTML("text/html", null),
+        PUML("text/plain", AsyncApiRecorder.ASYNC_API_PUML),
+        SVG("image/svg", AsyncApiRecorder.ASYNC_API_SVG);
 
         private final String mimeType;
+        private final String fileName;
 
-        Format(String mimeType) {
-            this.mimeType = mimeType;
+        Format(String aMimeType, String aFileName) {
+            mimeType = aMimeType;
+            fileName = aFileName;
         }
 
         public String getMimeType() {
             return mimeType;
+        }
+
+        public String getFileName() {
+            return fileName;
         }
     }
 }

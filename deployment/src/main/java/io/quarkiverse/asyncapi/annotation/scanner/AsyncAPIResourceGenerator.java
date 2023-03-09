@@ -45,7 +45,6 @@ public class AsyncAPIResourceGenerator {
             ShutdownContextBuildItem shutdownContext,
             AsyncApiRuntimeConfig config,
             List<FilterBuildItem> filterBuildItems) {
-
         String path = ConfigProvider.getConfig()
                 .getValue("quarkus.http.root-path", String.class).concat("/asyncapi");
         AsyncApiHandler handler = new AsyncApiHandler();
@@ -67,23 +66,13 @@ public class AsyncAPIResourceGenerator {
                 .displayOnNotFoundPage("Async API Schema document")
                 .blockingRoute()
                 .build());
-        routes.produce(nonApplicationRootPathBuildItem.routeBuilder()
-                .routeFunction(path + ".json", corsFilter)
-                .handler(handler)
-                .build());
-        routes.produce(nonApplicationRootPathBuildItem.routeBuilder()
-                .routeFunction(path + ".yaml", corsFilter)
-                .handler(handler)
-                .build());
-
-        routes.produce(nonApplicationRootPathBuildItem.routeBuilder()
-                .routeFunction(path + ".yml", corsFilter)
-                .handler(handler)
-                .build());
-        routes.produce(nonApplicationRootPathBuildItem.routeBuilder()
-                .routeFunction(path + ".html", corsFilter)
-                .handler(handler)
-                .build());
+        List<String> targets = List.of("json", "yaml", "yml", "html", "puml", "svg");
+        for (String target : targets) {
+            routes.produce(nonApplicationRootPathBuildItem.routeBuilder()
+                    .routeFunction(path + "." + target, corsFilter)
+                    .handler(handler)
+                    .build());
+        }
     }
 
     Consumer<Route> corsFilter(Filter filter) {
