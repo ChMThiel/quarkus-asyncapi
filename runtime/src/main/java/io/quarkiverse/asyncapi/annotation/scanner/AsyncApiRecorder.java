@@ -119,7 +119,7 @@ public class AsyncApiRecorder {
         try {
             SourceStringReader reader = new SourceStringReader(aPlantUml);
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
-            String desc = reader.generateImage(os, new FileFormatOption(aFormat));
+            reader.outputImage(os, new FileFormatOption(aFormat));
             os.close();
             return new String(os.toByteArray(), Charset.forName("UTF-8"));
         } catch (IOException e) {
