@@ -23,7 +23,7 @@ public class AsyncApiRuntimeConfig {
     /**
      * Full qualified name of the implementing AsyncApiFilter
      *
-     * @see AAFilter
+     * @see AsyncApiFilter
      */
     @ConfigItem
     public Optional<String> filter = Optional.empty();
