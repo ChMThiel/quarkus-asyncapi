@@ -106,7 +106,7 @@ public class AsyncApiHandler implements Handler<RoutingContext> {
         YAML("application/yaml", AsyncApiRecorder.ASYNC_API_YAML),
         HTML("text/html", null),
         PUML("text/plain", AsyncApiRecorder.ASYNC_API_PUML),
-        SVG("image/svg", AsyncApiRecorder.ASYNC_API_SVG);
+        SVG("image/svg+xml", AsyncApiRecorder.ASYNC_API_SVG);
 
         private final String mimeType;
         private final String fileName;
