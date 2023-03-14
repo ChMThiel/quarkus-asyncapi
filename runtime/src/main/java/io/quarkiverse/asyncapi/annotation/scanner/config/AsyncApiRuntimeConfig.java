@@ -13,6 +13,12 @@ import io.quarkus.runtime.annotations.ConfigRoot;
 public class AsyncApiRuntimeConfig {
 
     /**
+     * Enable AysncApi-Scanning
+     */
+    @ConfigItem(defaultValue = "true")
+    public boolean enabled;
+
+    /**
      * Version of the WebComponent to be used in html-view to be found at [HOST]/asyncapi.html
      *
      * @see https://www.npmjs.com/package/@asyncapi/react-component

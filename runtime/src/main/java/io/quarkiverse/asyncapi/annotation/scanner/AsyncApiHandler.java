@@ -25,18 +25,23 @@ public class AsyncApiHandler implements Handler<RoutingContext> {
     @Override
     public void handle(RoutingContext aRoutingContext) {
         HttpServerResponse resp = aRoutingContext.response();
-        Format format = getFormat(aRoutingContext);
-        resp.headers().set("Content-Type", format.getMimeType() + ";charset=UTF-8");
-        String output = switch (format) {
-            case HTML ->
-                getHtml(aRoutingContext);
-            default ->
-                read(format);
-        };
-        resp.end(Buffer.buffer(output)); // see http://localhost:8080/asyncapi
+        if (ConfigProvider.getConfig().getValue("quarkus.asyncapi.annotation.scanner.enabled", Boolean.class)) {
+            Format format = getFormat(aRoutingContext);
+            resp.headers().set("Content-Type", format.getMimeType() + ";charset=UTF-8");
+            String output = switch (format) {
+                case HTML ->
+                    getHtml(aRoutingContext);
+                default ->
+                    readFile(format);
+            };
+            resp.end(Buffer.buffer(output)); // see http://localhost:8080/asyncapi
+        } else {
+            resp.headers().set("Content-Type", "text/plain;charset=UTF-8");
+            resp.end("Async API disabled (see config asyncapi.annotation.scanner.enabled)");
+        }
     }
 
-    String read(Format aFormat) {
+    String readFile(Format aFormat) {
         try {
             Path path = Paths.get(System.getProperty("java.io.tmpdir"), aFormat.getFileName());
             return Files.readString(path);
