@@ -3,6 +3,7 @@ package io.quarkiverse.asyncapi.annotation.scanner;
 import static io.quarkus.deployment.annotations.ExecutionTime.RUNTIME_INIT;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -24,27 +25,33 @@ import io.vertx.ext.web.Route;
 public class AsyncAPIResourceGenerator {
 
     @Record(RUNTIME_INIT)
-    @BuildStep
+    @BuildStep(onlyIf = IsEnabled.class)
     void scanAsyncAPIs(
             CombinedIndexBuildItem aIndex,
-            AsyncApiRecorder aScannedAsyncApi,
+            AsyncApiRecorder aRecorder,
             AsyncApiRuntimeConfig aConfig) {
-        if (aConfig.enabled) {
-            AsyncAPI asyncAPI = new AsyncApiBuilder(aIndex.getIndex(), aConfig).build();
-            aScannedAsyncApi.setAsyncAPI(asyncAPI, aConfig);
-        } else {
-            Logger.getLogger(AsyncAPIResourceGenerator.class.getName())
-                    .warning("Async API disabled (see config asyncapi.annotation.scanner.enabled)");
+        AsyncApiBuilder builder = new AsyncApiBuilder();
+        AsyncAPI asyncAPI = builder.build(aIndex.getIndex(), aConfig);
+        aRecorder.store(asyncAPI, aConfig);
+    }
+
+    static class IsEnabled implements BooleanSupplier {
+
+        AsyncApiRuntimeConfig config;
+
+        public boolean getAsBoolean() {
+            if (!config.enabled) {
+                Logger.getLogger(AsyncAPIResourceGenerator.class.getName())
+                        .warning("Async API disabled (see config asyncapi.annotation.scanner.enabled)");
+            }
+            return config.enabled;
         }
     }
 
     @BuildStep
-    @Record(RUNTIME_INIT)
-    void handler(
+    void handleHttpRequests(
             BuildProducer<RouteBuildItem> aRoutes,
-            AsyncApiRecorder aRecorder,
             NonApplicationRootPathBuildItem aNonApplicationRootPathBuildItem,
-            AsyncApiRuntimeConfig aConfig,
             List<FilterBuildItem> aFilterBuildItems) {
         String path = ConfigProvider.getConfig()
                 .getValue("quarkus.http.root-path", String.class).concat("/asyncapi");

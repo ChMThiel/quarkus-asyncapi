@@ -6,8 +6,8 @@
                 <packaging>jar</packaging>
             </packagings>
             <goals>
-                <goal>clean</goal>
                 <goal>quarkus:dev</goal>
+                
             </goals>
         </action>
     </actions>

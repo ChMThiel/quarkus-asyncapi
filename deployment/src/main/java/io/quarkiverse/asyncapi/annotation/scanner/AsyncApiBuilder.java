@@ -14,23 +14,15 @@ import io.quarkiverse.asyncapi.annotation.scanner.config.AsyncApiRuntimeConfig;
  */
 public class AsyncApiBuilder {
 
-    final AsyncApiRuntimeConfig config;
-    final IndexView index;
-
-    public AsyncApiBuilder(IndexView aIndex, AsyncApiRuntimeConfig aConfig) {
-        index = aIndex;
-        config = aConfig;
-    }
-
-    AsyncAPI build() {
-        ConfigResolver configResolver = new ConfigResolver(config);
-        AsyncApiAnnotationScanner scanner = new AsyncApiAnnotationScanner(index, configResolver);
+    AsyncAPI build(IndexView aIndex, AsyncApiRuntimeConfig aConfig) {
+        AsyncApiConfigResolver configResolver = new AsyncApiConfigResolver(aConfig);
+        AsyncApiAnnotationScanner scanner = new AsyncApiAnnotationScanner(aIndex, configResolver);
         AsyncAPI.AsyncAPIBuilder builder = AsyncAPI.builder()
-                .asyncapi(config.version)
+                .asyncapi(aConfig.version)
                 //                id: 'https://github.com/smartylighting/streetlights-server'
                 .id(configResolver.getConfiguredKafkaBootstrapServer())
                 .info(configResolver.getInfo())
-                .defaultContentType(config.defaultContentType)
+                .defaultContentType(aConfig.defaultContentType)
                 .channels(scanner.getChannels())
                 .components(scanner.getGlobalComponents());
         Map<String, Server> servers = configResolver.getServers();

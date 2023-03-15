@@ -17,11 +17,11 @@ import io.quarkiverse.asyncapi.annotation.scanner.config.Channel;
 /**
  * @since 02.03.2023
  */
-public class ConfigResolver {
+public class AsyncApiConfigResolver {
 
     final AsyncApiRuntimeConfig config;
 
-    public ConfigResolver(AsyncApiRuntimeConfig aConfig) {
+    public AsyncApiConfigResolver(AsyncApiRuntimeConfig aConfig) {
         this.config = aConfig;
     }
 
@@ -67,7 +67,7 @@ public class ConfigResolver {
         return config.channels.get(aChannel);
     }
 
-    Map<String, Server> getServers() {
+    public Map<String, Server> getServers() {
         if (config.servers.isEmpty()) {
             return null;
         }

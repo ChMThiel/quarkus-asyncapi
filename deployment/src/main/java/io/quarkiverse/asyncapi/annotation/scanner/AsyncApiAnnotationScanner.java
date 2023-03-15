@@ -59,13 +59,13 @@ public class AsyncApiAnnotationScanner {
     static final Logger LOGGER = Logger.getLogger(AsyncApiAnnotationScanner.class.getName());
 
     final IndexView index;
-    final ConfigResolver configResolver;
+    final AsyncApiConfigResolver configResolver;
 
     static Set<Type> VISITED_TYPES = new HashSet<>();
 
     KafkaResolver kafkaResolver;
 
-    public AsyncApiAnnotationScanner(IndexView aIndex, ConfigResolver aConfigResolver) {
+    public AsyncApiAnnotationScanner(IndexView aIndex, AsyncApiConfigResolver aConfigResolver) {
         index = aIndex;
         configResolver = aConfigResolver;
     }

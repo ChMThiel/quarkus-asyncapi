@@ -41,12 +41,12 @@ public class AsyncApiRecorder {
     public static final String ASYNC_API_PUML = "asyncApi.puml";
     public static final String ASYNC_API_SVG = "asyncApi.svg";
 
-    public void setAsyncAPI(AsyncAPI aAsyncAPI, AsyncApiRuntimeConfig aConfig) {
+    public void store(AsyncAPI aAsyncAPI, AsyncApiRuntimeConfig aConfig) {
         try {
             AsyncAPI filteredAPI = filter(aAsyncAPI, aConfig);
             store(ObjectMapperFactory.yaml().writeValueAsString(filteredAPI), ASYNC_API_YAML);
             store(ObjectMapperFactory.json().writeValueAsString(filteredAPI), ASYNC_API_JSON);
-            String plantUml = toPlantUml(aAsyncAPI);
+            String plantUml = toPlantUml(filteredAPI);
             store(plantUml, ASYNC_API_PUML);
             store(plantUmlToGrafik(plantUml, FileFormat.SVG), ASYNC_API_SVG);
         } catch (JsonProcessingException e) {
